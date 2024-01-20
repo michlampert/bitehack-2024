@@ -33,9 +33,9 @@ const EventInputComponent: React.FC = () => {
             // Handle the response
             const data = await response.json();
             console.log(data);
-            alert('Event created successfully!');
+            alert('Joined the event successfully!');
         } catch (error) {
-            console.error('There was an error creating the event:', error);
+            console.error('There was an error while joining the event:', error);
         }
     };
 
