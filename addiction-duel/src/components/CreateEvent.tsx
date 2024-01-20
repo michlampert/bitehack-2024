@@ -20,14 +20,12 @@ export default function CreateEvent(){
     }
 
     const handleAdd = (toAdd: string) => {
-        setBlacklist((chips) => chips.concat([toAdd]))
+        if (!blacklist.includes(toAdd)){
+            setBlacklist((chips) => chips.concat([toAdd]))
+        }
     }
 
     const scheduleEvent = (() => {
-        console.log(111);
-        console.log(startTime);
-        console.log(endTime);
-        console.log(startTime)
     })
 
     return <Container maxWidth="sm">
@@ -35,7 +33,14 @@ export default function CreateEvent(){
             <Box sx={{width: '100%'}}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                     <TextField required label="Challenge name" onChange={(event) => setEventName(event.target.value)} fullWidth/>
-                    <TextField type="number" defaultValue={30} required label="Time to use media [min]" onChange={(event) => setTimeToUse(Number(event.target.value))} fullWidth/>
+                    <TextField 
+                        type="number"
+                        defaultValue={30}
+                        required label="Time to use media [min]"
+                        onChange={(event) => setTimeToUse(Number(event.target.value))}
+                        fullWidth
+                        InputProps={{inputProps: {min: 0}}}
+                        />
                 </Stack>
             </Box>
             <Box sx={{ width: '100%'}}>
