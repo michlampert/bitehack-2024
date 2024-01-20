@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS events;
+CREATE DATABASE IF NOT EXISTS events_db;
 
-USE events;
+USE events_db;
 
 CREATE TABLE IF NOT EXISTS event(
     id int AUTO_INCREMENT PRIMARY KEY,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS event(
     description text NOT NULL,
     start timestamp NOT NULL,
     end timestamp NOT NULL,
-    free_time int NOT NULL,
+    free_time int NOT NULL
 );
 
 

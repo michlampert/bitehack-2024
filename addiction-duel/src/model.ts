@@ -11,5 +11,5 @@ export interface Event {
     freeTime: number,
     users: User[],
     blacklist: string[],
-    state: "inProgress" | "done",
+    state: "planned" | "inProgress" | "done",
 }
