@@ -13,7 +13,7 @@ export async function getEvents(id: string): Promise<Event[]> {
         endTime: new Date()
     }
     return [tmp, tmp, {
-        id: "asd",
+        id: "dsa",
         name: "das",
         users: [{ name: "Ala", status: "fail", progress: 60 }, f("Bob")],
         blacklist: ["facebook.com", "instagram.com"],

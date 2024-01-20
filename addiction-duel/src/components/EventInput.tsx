@@ -47,7 +47,7 @@ const EventInputComponent: React.FC = () => {
                 label="Enter Event ID"
                 variant="outlined"
             />
-            <Button variant="contained" color="primary" type="submit">
+            <Button variant="outlined" color="primary" type="submit">
                 Join Event
             </Button>
         </form>
