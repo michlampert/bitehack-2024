@@ -6,7 +6,9 @@ export interface User {
 
 export interface Event {
     name: string,
-    time: string,
+    startTime: Date,
+    endTime: Date,
+    freeTime: number,
     users: User[],
     blacklist: string[],
     state: "inProgress" | "done",
