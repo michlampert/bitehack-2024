@@ -7,9 +7,8 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# Database Configuration
 db_config = {
-    "host": "localhost",
+    "host": "mysql",
     "user": "user",
     "password": "password",
     "database": "challenge_db",
@@ -23,6 +22,11 @@ def db_connection():
     except Error as e:
         print(e)
     return conn
+
+
+@app.route("/")
+def hello_world():
+    return "Hello, World!"
 
 
 @app.route("/create-challenge", methods=["POST"])
@@ -58,4 +62,4 @@ def add_participant():
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
