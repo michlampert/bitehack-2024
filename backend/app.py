@@ -4,10 +4,8 @@ import datetime
 from mysql.connector import Error
 
 from flask import Flask
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
 
 db_config = {
     "host": "mysql",
@@ -32,51 +30,44 @@ def hello_world():
     return "Hello, World!"
 
 
-def create_constraint(constraint, challenge_id, conn, cursor):
-    if "time_limit" not in constraint:
-        return jsonify({"error": "Missing time limit field in constraint"}), 400
-    if "website" not in constraint:
-        return jsonify({"error": "Missing website field in constraint"}), 400
-
-    cursor.execute(
-        "INSERT INTO constraints (time_limit, website, challenge_id) VALUES (%s, %s, %s)",
-        (constraint["time_limit"], constraint["website"], challenge_id),
-    )
-    conn.commit()
-
-
-@app.route("/create-challenge", methods=["POST"])
-def create_challenge():
+@app.route("/create-event", methods=["POST"])
+def create_event():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
 
-    if "title" not in data:
-        return jsonify({"error": "Missing title field"}), 400
+    if "name" not in data:
+        return jsonify({"error": "Missing name field"}), 400
     if "description" not in data:
         return jsonify({"error": "Missing description field"}), 400
-    if "constraints" not in data:
-        return jsonify({"error": "Missing constraints field"}), 400
     if "total_time" not in data:
         return jsonify({"error": "Missing total_time field"}), 400
     if "start" not in data:
         return jsonify({"error": "Missing start field"}), 400
+    if "free_time" not in data:
+        return jsonify({"error": "Missing free_time field"}), 400
+    if "blacklist" not in data:
+        return jsonify({"error": "Missing blacklist field"}), 400
+
     start = datetime.datetime.fromisoformat(data["start"])
     start = start.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=0)))
     end = start + datetime.timedelta(seconds=data["total_time"])
 
     cursor.execute(
-        "INSERT INTO challenges (title, description, start, end) VALUES (%s, %s, %s, %s)",
-        (data["title"], data["description"], start, end),
+        "INSERT INTO event (name, description, start, end, free_time) VALUES (%s, %s, %s, %s, %s)",
+        (data["name"], data["description"], start, end, data["free_time"]),
     )
     conn.commit()
+    event_id = cursor.lastrowid
 
-    challenge_id = cursor.lastrowid
+    for page in data["blacklist"]:
+        cursor.execute(
+            "INSERT INTO blacklist (event_id, website) VALUES (%s, %s)",
+            (event_id, page),
+        )
 
-    for constraint in data["constraints"]:
-        create_constraint(constraint, challenge_id, conn, cursor)
 
-    return jsonify({"message": "Challenge created successfully"}), 201
+    return jsonify({"message": "Event created successfully", "id": event_id}), 201
 
 
 @app.post("/create-user")
@@ -100,26 +91,15 @@ def add_participant():
     conn = db_connection()
     cursor = conn.cursor()
 
-    if "challenge_id" not in data:
-        return jsonify({"error": "Missing challenge_id field"}), 400
+    if "event_id" not in data:
+        return jsonify({"error": "Missing event_id field"}), 400
     if "user_id" not in data:
         return jsonify({"error": "Missing user_id field"}), 400
 
     cursor.execute(
-        "SELECT id FROM constraints WHERE challenge_id = %s", (data["challenge_id"],)
+        "INSERT INTO status (user_id, event_id) VALUES (%s, %s)",
+        (data["user_id"], data["event_id"]),
     )
-    challenge_constaints_id = cursor.fetchall()
-
-    for constraint_id in challenge_constaints_id:
-        cursor.execute(
-            "INSERT INTO status (user_id, constraint_id) VALUES (%s, %s)",
-            (
-                data["user_id"],
-                constraint_id[0],
-            ),
-        )
-        conn.commit()
-
     return jsonify({"message": "Participant added successfully"}), 201
 
 
@@ -128,7 +108,6 @@ def update_status():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
-    print("DATA", data)
 
     if "user_id" not in data:
         return jsonify({"error": "Missing user_id field"}), 400
@@ -137,8 +116,8 @@ def update_status():
 
     cursor.execute(
         "SELECT status.id, last_started FROM status "
-        "INNER JOIN constraints ON status.constraint_id = constraints.id "
-        "INNER JOIN challenges ON constraints.challenge_id = challenges.id "
+        "INNER JOIN event ON status.event_id = event.id "
+        "INNER JOIN blacklist ON blacklist.event_id = event.id "
         "WHERE start < NOW() and end > NOW() and user_id = %s AND website = %s",
         (
             data["user_id"],
@@ -148,22 +127,22 @@ def update_status():
     statuses = cursor.fetchall()
 
     for status in statuses:
-        if status[1] is None:
+        status_id, last_started = status
+        if last_started is None:
             cursor.execute(
                 "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (
-                    data["url"] if "url" in data else data["website"],
-                    status[0],
-                ),
+                (data["url"] if "url" in data else data["website"], status_id,),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - status[1]
+            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(
+                last_started)
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
                 (
+                    data["website"],
                     difference.total_seconds(),
-                    status[0],
+                    status_id,
                 ),
             )
         else:
@@ -171,7 +150,7 @@ def update_status():
                 "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
                 (
                     data["url"],
-                    status[0],
+                    status_id
                 ),
             )
     conn.commit()
@@ -191,9 +170,8 @@ def is_forbidden():
         return jsonify({"error": "Missing website parameter"}), 400
 
     cursor.execute(
-        "SELECT title FROM challenges "
-        "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
-        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "SELECT name FROM events "
+        "INNER JOIN blacklist ON blacklist.event_id = events.id "
         "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
         (
             website,
@@ -205,53 +183,61 @@ def is_forbidden():
     return jsonify({"is_forbidden": len(constraint_ids) > 0}), 200
 
 
-@app.get("/get-challenge-status")
-def get_challenge_status():
+@app.get("/get-event-status")
+def get_event_status():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
 
-    if "challenge_id" not in data:
-        return jsonify({"error": "Missing challenge_id field"}), 400
+    if "event_id" not in data:
+        return jsonify({"error": "Missing event_id field"}), 400
 
     cursor.execute(
-        "SELECT username, total_time, time_limit, website FROM status "
-        "INNER JOIN constraints ON status.constraint_id = constraints.id "
+        "SELECT username, total_time, last_started FROM status "
         "INNER JOIN users ON status.user_id = users.id "
-        "WHERE challenge_id = %s",
-        (data["challenge_id"],),
+        "WHERE event_id = %s",
+        (data["event_id"],),
     )
-    challenge_status = cursor.fetchall()
+    event_status = cursor.fetchall()
 
     cursor.execute(
-        "SELECT title, description, start, end FROM challenges WHERE id = %s",
-        (data["challenge_id"],),
+        "SELECT title, description, start, end, free_time FROM event WHERE id = %s",
+        (data["event_id"],),
     )
-    challenge_info = cursor.fetchone()
+    event_info = cursor.fetchone()
 
     result = {
-        "title": challenge_info[0],
-        "description": challenge_info[1],
-        "start": challenge_info[2],
-        "end": challenge_info[3],
-        "participants": {},
+        "title": event_info[0],
+        "description": event_info[1],
+        "start": event_info[2],
+        "end": event_info[3],
+        "free_time": event_info[4],
+        "users": [],
     }
 
-    for constraint in challenge_status:
-        username, total_time, time_limit, website = constraint
+    for status in event_status:
+        username, total_time, last_started = status
 
-        if username not in result["participants"]:
-            result["participants"][username] = {
-                "failed": False,
+        if last_started is not None:
+            additional_time = (datetime.datetime.now() - datetime.datetime.fromisoformat(
+                last_started
+            )).total_seconds()
+        else:
+            additional_time = 0
+
+        result["users"].append(
+            {
+                "username": username,
+                "progress": total_time + additional_time,
+                "status": "ok" if event_info[4] < total_time + additional_time else "fail",
             }
-        if total_time > time_limit:
-            result["participants"][username]["failed"] = True
+        )
 
     return jsonify(result), 200
 
 
-@app.get("/get-user-challenges")
-def get_user_challenges():
+@app.get("/get-user-events")
+def get_user_events():
     if "user_id" not in request.args:
         return jsonify({"error": "Missing user_id parameter"}), 400
 
@@ -259,14 +245,11 @@ def get_user_challenges():
     cursor = conn.cursor()
 
     cursor.execute(
-       "SELECT c.id, c.title, c.description, c.start, c.end FROM constraints "
-       "INNER JOIN status ON status.constraint_id = constraints.id "
-       "INNER JOIN challenges as c ON constraints.challenge_id = c.id "
-       "WHERE user_id = %s", (request.args["user_id"],)
+        "SELECT event_id FROM status WHERE user_id = %s", (request.args["user_id"],)
     )
-    challenges = cursor.fetchall()
+    event_ids = cursor.fetchall()
 
-    return jsonify(challenges), 200
+    return jsonify(event_ids), 200
 
 
 if __name__ == "__main__":
