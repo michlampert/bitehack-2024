@@ -13,10 +13,21 @@ CREATE TABLE IF NOT EXISTS users(
     username varchar(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS challenge_participants(
+CREATE TABLE IF NOT EXISTS constraints(
+    id int AUTO_INCREMENT PRIMARY KEY,
     challenge_id int,
-    user_id int,
-    PRIMARY KEY (challenge_id, user_id),
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    time_limit int,
+    website varchar(255),
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id)
 );
+
+CREATE TABLE IF NOT EXISTS status(
+    user_id int,
+    constraint_id int,
+    reason text,
+    last_started timestamp,
+    total_time int,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (constraint_id) REFERENCES constraints(id)
+);
+
