@@ -199,6 +199,7 @@ def get_challenge_status():
         "INNER JOIN constraints ON status.constraint_id = constraints.id "
         "INNER JOIN users ON status.user_id = users.id "
         "WHERE challenge_id = %s",
+        (data["challenge_id"],)
     )
     challenge_status = cursor.fetchall()
 
