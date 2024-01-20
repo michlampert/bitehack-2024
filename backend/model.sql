@@ -5,7 +5,9 @@ USE challenge_db;
 CREATE TABLE IF NOT EXISTS challenges(
     id int AUTO_INCREMENT PRIMARY KEY,
     title varchar(255) NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    start timestamp NOT NULL,
+    end timestamp NOT NULL,
 );
 
 CREATE TABLE IF NOT EXISTS users(
@@ -22,9 +24,10 @@ CREATE TABLE IF NOT EXISTS constraints(
 );
 
 CREATE TABLE IF NOT EXISTS status(
+    id int AUTO_INCREMENT PRIMARY KEY,
     user_id int,
     constraint_id int,
-    reason text,
+    reason text NOT NULL default '',
     last_started timestamp,
     total_time int,
     FOREIGN KEY (user_id) REFERENCES users(id),
