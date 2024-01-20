@@ -250,5 +250,24 @@ def get_challenge_status():
     return jsonify(result), 200
 
 
+@app.get("/get-user-challenges")
+def get_user_challenges():
+    if "user_id" not in request.args:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+       "SELECT c.id, c.title, c.description, c.start, c.end FROM constraints "
+       "INNER JOIN status ON status.constraint_id = constraints.id "
+       "INNER JOIN challenges as c ON constraints.challenge_id = c.id "
+       "WHERE user_id = %s", (request.args["user_id"],)
+    )
+    challenges = cursor.fetchall()
+
+    return jsonify(challenges), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
