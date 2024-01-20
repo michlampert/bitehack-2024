@@ -5,7 +5,6 @@ from mysql.connector import Error
 import requests
 from bs4 import BeautifulSoup
 import json
-
 from flask import Flask
 
 app = Flask(__name__)
@@ -14,7 +13,7 @@ db_config = {
     "host": "mysql",
     "user": "user",
     "password": "password",
-    "database": "challenge_db",
+    "database": "events",
 }
 
 
@@ -228,15 +227,14 @@ def get_history():
         return jsonify({"error": "Missing user_id parameter"}), 400
 
     cursor.execute(
-        "SELECT reason FROM challenges "
-        "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
-        "INNER JOIN status ON status.constraint_id = constraints.id "
-        "WHERE user_id = %s",
+        "SELECT reason FROM event "
+        "INNER JOIN blacklist ON blacklist.event_id = event.id "
+        "INNER JOIN status ON status.user_id = %s AND status.event_id = event.id ",
         (user_id,),
     )
-    history = cursor.fetchall()
-
-    return jsonify(history), 200
+    history = cursor.fetchone()
+    history_items = [json.loads(item) for item in history.split(" ")]
+    return jsonify(history_items), 200
 
 
 @app.get("/get-event-status")
