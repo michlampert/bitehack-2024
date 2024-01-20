@@ -1,5 +1,8 @@
 import { Event, User } from './model'
 
+const URL: string = "http://localhost:8000/"
+
+
 export async function getEvents(id: string): Promise<Event[]> {
     const f = (name: string): User => ({ name, status: "ok", progress: 80 })
     const tmp: Event = {
@@ -10,8 +13,20 @@ export async function getEvents(id: string): Promise<Event[]> {
     return [tmp, tmp, tmp]
 }
 
-export async function addEvent(event: Event): Promise<void> {
-
+export async function addEvent(): Promise<void> {
+    let response = await fetch(
+        URL + "add-challenge",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                title: event.name,
+                start: event.time,
+                participants: event.users.map((user) => { return {user: user.name, failed: user.status == "fail"}}),
+                constraints: event.blacklist.map((url) => { return {url: url}})
+            })
+        }
+    );
+    let data = await response.json();
 }
 
 export async function addUserToEvent(id: string): Promise<void> {
