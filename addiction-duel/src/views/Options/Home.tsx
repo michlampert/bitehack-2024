@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 
 import EventComponent from '../../components/Event'
-import TopBarComponent from '../../components/TopBar'
+import EventInputComponent from '../../components/EventInput'
 import { Event } from '../../model'
 
-import './App.css'
 import { getEvents } from '../../api'
 import { Container } from '@mui/material'
 
@@ -15,11 +14,13 @@ export default function Home() {
     getEvents("user_id").then(setEvents)
 
     return <>
-        <TopBarComponent></TopBarComponent>
+
         <Container maxWidth="md">
             {
                 events.map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
             }
         </Container>
+
+        <EventInputComponent />
     </>
 }
