@@ -19,7 +19,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
-    "importHelpers": true
+    "importHelpers": true,
+    "types": [
+      "chrome",
+      "jest"
+    ]
   },
   "include": [
     "src/*"
