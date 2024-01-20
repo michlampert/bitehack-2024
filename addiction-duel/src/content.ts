@@ -1,5 +1,40 @@
 console.log('Hello Content');
-const userId = 1;
+const name = "Kuba";
+let userId: number;
+
+
+function main() {
+    chrome.storage.local.get("user_id", function (result) {
+        if (result.user_id) {
+            userId = 1; // result.user_id;
+            showPopupIfForbidden();
+        } else {
+            const url = `http://localhost:8000/create-user`;
+
+            const data = {
+                name: name,
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response from server:', data);
+                    userId = data.user_id;
+                    chrome.storage.local.set({ "user_id": data.user_id });
+                    showPopupIfForbidden();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    });
+}
 
 function showPopupIfForbidden() {
     const domain = window.location.hostname.replace(/^www\./, '');
@@ -21,7 +56,6 @@ function showPopupIfForbidden() {
 function updateStatus(close: boolean) {
     const domain = window.location.hostname.replace(/^www\./, '');
     const url = `http://localhost:8000/update-status`;
-
     const data: { user_id: number; website: string;[key: string]: any } = {
         user_id: userId,
         website: domain
@@ -71,6 +105,18 @@ function createPopup() {
     popup.style.alignItems = 'center';
     popup.style.fontSize = '20px';
 
+    const toggleBlurEffect = (on: boolean): void => {
+        const mainContent: HTMLCollection = document.body.children;
+        Array.from(mainContent).forEach((element: Element) => {
+            if (element !== popup) {
+                const htmlElement: HTMLElement = element as HTMLElement;
+                htmlElement.style.filter = on ? 'blur(8px)' : 'none';
+            }
+        });
+    };
+
+    toggleBlurEffect(true);
+
     // Create and style the title
     var title = document.createElement('h1');
     title.innerText = 'Warning!';
@@ -108,7 +154,7 @@ function createPopup() {
         window.addEventListener("beforeunload", function () {
             updateStatus(true);
         });
-
+        toggleBlurEffect(false);
     };
     buttonContainer.appendChild(ignoreButton);
 
@@ -131,6 +177,6 @@ function setButtonStyle(button: HTMLButtonElement) {
     button.style.fontWeight = 'bold';
 }
 
-showPopupIfForbidden();
+main();
 
 export { }

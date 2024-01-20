@@ -90,8 +90,9 @@ def create_user():
 
     cursor.execute("INSERT INTO users (username) VALUES (%s)", (data["name"],))
     conn.commit()
+    user_id = cursor.lastrowid
 
-    return jsonify({"message": "User created successfully"}), 201
+    return jsonify({"user_id": user_id}), 201
 
 
 @app.route("/add-participant", methods=["POST"])
@@ -259,10 +260,11 @@ def get_user_challenges():
     cursor = conn.cursor()
 
     cursor.execute(
-       "SELECT c.id, c.title, c.description, c.start, c.end FROM constraints "
-       "INNER JOIN status ON status.constraint_id = constraints.id "
-       "INNER JOIN challenges as c ON constraints.challenge_id = c.id "
-       "WHERE user_id = %s", (request.args["user_id"],)
+        "SELECT c.id, c.title, c.description, c.start, c.end FROM constraints "
+        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "INNER JOIN challenges as c ON constraints.challenge_id = c.id "
+        "WHERE user_id = %s",
+        (request.args["user_id"],),
     )
     challenges = cursor.fetchall()
 
