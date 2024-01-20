@@ -1,4 +1,5 @@
 import React, { useState, FormEvent } from 'react';
+import { TextField, Button } from '@mui/material';
 
 const EventInputComponent: React.FC = () => {
     const [inputValue, setInputValue] = useState<string>('');
@@ -10,7 +11,6 @@ const EventInputComponent: React.FC = () => {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // Assuming the input is an integer
         const eventId = parseInt(inputValue, 10);
         if (isNaN(eventId)) {
             alert('Please enter a valid integer');
@@ -30,7 +30,6 @@ const EventInputComponent: React.FC = () => {
                 throw new Error('Network response was not ok');
             }
 
-            // Handle the response
             const data = await response.json();
             console.log(data);
             alert('Joined the event successfully!');
@@ -40,14 +39,17 @@ const EventInputComponent: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '300px', margin: 'auto' }}>
+            <TextField
                 type="number"
                 value={inputValue}
                 onChange={handleInputChange}
-                placeholder="Enter Event ID"
+                label="Enter Event ID"
+                variant="outlined"
             />
-            <button type="submit">Join Event</button>
+            <Button variant="contained" color="primary" type="submit">
+                Join Event
+            </Button>
         </form>
     );
 };

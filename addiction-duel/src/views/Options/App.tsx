@@ -15,9 +15,8 @@ export default function App() {
   getEvents("user_id").then(setEvents)
 
   return <>
-    <TopBarComponent></TopBarComponent>
-    <EventInputComponent></EventInputComponent>
-
+    <TopBarComponent />
+    <EventInputComponent />
     {
       events.map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
     }
