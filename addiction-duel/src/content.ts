@@ -155,6 +155,15 @@ function createPopup() {
             updateStatus(true);
         });
         toggleBlurEffect(false);
+        // Save visited pages on the same website:
+        let lastUrl = window.location.href;
+        setInterval(() => {
+            const currentUrl = window.location.href;
+            if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl;
+                updateStatus(false);
+            }
+        }, 1000);
     };
     buttonContainer.appendChild(ignoreButton);
 
