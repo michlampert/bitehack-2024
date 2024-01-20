@@ -1,24 +1,22 @@
-import React, { useState } from 'react'
+import React from 'react'
 
-import EventComponent from '../../components/Event'
+import { useLocation } from 'react-router-dom'
+import DetailedView from './DetailedView'
+import Home from './Home'
 import TopBarComponent from '../../components/TopBar'
-import EventInputComponent from '../../components/EventInput'
-import { Event } from '../../model'
 
-import './App.css'
-import { getEvents } from '../../api'
+function useQuery() {
+  const { search } = useLocation();
+
+  return React.useMemo(() => new URLSearchParams(search), [search]);
+}
 
 export default function App() {
 
-  const [events, setEvents] = useState<Event[]>([])
-
-  getEvents("user_id").then(setEvents)
+  const query = useQuery()
 
   return <>
     <TopBarComponent />
-    <EventInputComponent />
-    {
-      events.map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
-    }
+    {query.get("id") ? <DetailedView id={query.get("id")!} /> : <Home />}
   </>
 }
