@@ -1,55 +1,79 @@
 import React from 'react'
-import { Accordion, AccordionSummary, AccordionDetails, Container, Chip, Stack, Typography, Box, LinearProgress } from '@mui/material'
+import { Accordion, AccordionSummary, AccordionDetails, Chip, Stack, Typography, Box, LinearProgress, Button } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Event } from '../model'
 import FaceIcon from '@mui/icons-material/Face'
 import LinkOffIcon from '@mui/icons-material/LinkOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DoneIcon from '@mui/icons-material/Done';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import EventIcon from '@mui/icons-material/Event';
+import MailIcon from '@mui/icons-material/Mail';
+import EditIcon from '@mui/icons-material/Edit';
 
 export default function EventComponent(props: { event: Event }) {
     return <>
-        <Container maxWidth="sm">
-            <Accordion>
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    aria-controls="panel1-content"
-                    id="panel1-header"
-                >
-                    <Box sx={{ width: '100%' }}>
-                        <Stack spacing={1}>
-                            <Stack direction="row" justifyContent="left" alignItems="center" spacing={1}>
-                                <Typography gutterBottom variant="h5" component="div">
-                                    {props.event.name}
-                                </Typography>
-                                {
-                                    props.event.state === "done" ?
-                                        <DoneIcon color="success" /> :
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1-content"
+                id="panel1-header"
+            >
+                <Box sx={{ width: '100%' }}>
+                    <Stack spacing={1}>
+                        <Stack direction="row" justifyContent="left" alignItems="center" spacing={1}>
+                            <Typography gutterBottom variant="h5" component="div">
+                                {props.event.name}
+                            </Typography>
+                            {
+                                props.event.state === "done" ?
+                                    <DoneIcon color="primary" /> :
+                                    props.event.state === "future" ?
+                                        <EventIcon color="primary" /> :
                                         <HourglassTopIcon color="primary" />
 
-                                }
-                            </Stack>
-                            <Stack direction="row" spacing={1} justifyContent="left">
-                                {
-                                    props.event.users.map(u => <Chip icon={<FaceIcon />} label={u.name} {...(u.status !== "ok" ? { disabled: true } : {})} />)
-                                }
-                            </Stack>
-                            <Stack direction="row" spacing={1} justifyContent="left">
-                                {
-                                    props.event.blacklist.map(url => <Chip icon={<LinkOffIcon />} label={url} />)
-                                }
-                            </Stack>
+                            }
                         </Stack>
-                    </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <Stack spacing={3}>
-                        {props.event.users.map((u, id) => <ProgressWithLabel key={id} label={u.name} value={u.progress ? u.progress : 0} status={u.status} />)}
+                        <Stack direction="row" spacing={1} justifyContent="left">
+                            {
+                                props.event.users.map(u => <Chip icon={<FaceIcon />} label={u.name} {...(u.status !== "ok" ? { disabled: true } : {})} />)
+                            }
+                        </Stack>
+                        <Stack direction="row" spacing={1} justifyContent="left">
+                            {
+                                props.event.blacklist.map(url => <Chip icon={<LinkOffIcon />} label={url} />)
+                            }
+                        </Stack>
                     </Stack>
-                </AccordionDetails>
-            </Accordion>
+                </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Stack spacing={3}>
+                    {props.event.users.map((u, id) => <ProgressWithLabel key={id} label={u.name} value={u.progress ? u.progress : 0} status={u.status} />)}
+                    <Stack direction="row" spacing={2} justifyContent="right">
+                        {
+                            props.event.state === "inProgress" ?
+                                <Button variant="outlined" startIcon={<EditIcon />}>
+                                    Edit
+                                </Button>  :
+                                <></>
+                        }
 
-        </Container>
+                        {
+                            props.event.state === "inProgress" ?
+                                <Button variant="outlined" endIcon={<MailIcon />}>
+                                    Invite
+                                </Button> :
+                                <></>
+                        }
+                        <Button variant="outlined" endIcon={<AddCircleIcon />}>
+                            More
+                        </Button>
+                    </Stack>
+                </Stack>
+            </AccordionDetails>
+        </Accordion>
     </>
 }
 
