@@ -59,13 +59,13 @@ def create_challenge():
         return jsonify({"error": "Missing total_time field"}), 400
     if "start" not in data:
         return jsonify({"error": "Missing start field"}), 400
-
-    end = datetime.datetime.fromisoformat(data["start"])
-    end += datetime.timedelta(seconds=data["total_time"])
+    start = datetime.datetime.fromisoformat(data["start"])
+    start = start.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=0)))
+    end = start + datetime.timedelta(seconds=data["total_time"])
 
     cursor.execute(
         "INSERT INTO challenges (title, description, start, end) VALUES (%s, %s, %s, %s)",
-        (data["title"], data["description"], data["start"], end),
+        (data["title"], data["description"], start, end),
     )
     conn.commit()
 
@@ -86,9 +86,7 @@ def create_user():
     if "name" not in data:
         return jsonify({"error": "Missing name field"}), 400
 
-    cursor.execute(
-        "INSERT INTO users (username) VALUES (%s)", (data["name"],)
-    )
+    cursor.execute("INSERT INTO users (username) VALUES (%s)", (data["name"],))
     conn.commit()
 
     return jsonify({"message": "User created successfully"}), 201
@@ -113,7 +111,10 @@ def add_participant():
     for constraint_id in challenge_constaints_id:
         cursor.execute(
             "INSERT INTO status (user_id, constraint_id) VALUES (%s, %s)",
-            (data["user_id"], constraint_id[0],)
+            (
+                data["user_id"],
+                constraint_id[0],
+            ),
         )
         conn.commit()
 
@@ -136,7 +137,10 @@ def update_status():
         "INNER JOIN constraints ON status.constraint_id = constraints.id "
         "INNER JOIN challenges ON constraints.challenge_id = challenges.id "
         "WHERE start < NOW() and end > NOW() and user_id = %s AND website = %s",
-        (data["user_id"], data["website"],)
+        (
+            data["user_id"],
+            data["website"],
+        ),
     )
     statuses = cursor.fetchall()
 
@@ -144,19 +148,31 @@ def update_status():
         if status[1] is None:
             cursor.execute(
                 "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (data["url"] if "url" in data else data["website"], status[0],)
+                (
+                    data["url"] if "url" in data else data["website"],
+                    status[0],
+                ),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(status[1])
+            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(
+                status[1]
+            )
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
-                (data["website"], difference.total_seconds(), status[0],)
+                (
+                    data["website"],
+                    difference.total_seconds(),
+                    status[0],
+                ),
             )
         else:
             cursor.execute(
                 "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (data["url"], status[0],)
+                (
+                    data["url"],
+                    status[0],
+                ),
             )
     conn.commit()
     return jsonify({"message": "Status updated successfully"}), 201
@@ -164,21 +180,25 @@ def update_status():
 
 @app.get("/is-forbidden")
 def is_forbidden():
-    data = request.json
+    user_id = request.args.get("user_id")
+    website = request.args.get("website")
     conn = db_connection()
     cursor = conn.cursor()
 
-    if "user_id" not in data:
-        return jsonify({"error": "Missing user_id field"}), 400
-    if "website" not in data:
-        return jsonify({"error": "Missing website field"}), 400
+    if not user_id:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+    if not website:
+        return jsonify({"error": "Missing website parameter"}), 400
 
     cursor.execute(
         "SELECT title FROM challenges "
         "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
         "INNER JOIN status ON status.constraint_id = constraints.id "
         "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
-        (data["website"], data["user_id"],)
+        (
+            website,
+            user_id,
+        ),
     )
     constraint_ids = cursor.fetchall()
 
@@ -199,13 +219,13 @@ def get_challenge_status():
         "INNER JOIN constraints ON status.constraint_id = constraints.id "
         "INNER JOIN users ON status.user_id = users.id "
         "WHERE challenge_id = %s",
-        (data["challenge_id"],)
+        (data["challenge_id"],),
     )
     challenge_status = cursor.fetchall()
 
     cursor.execute(
         "SELECT title, description, start, end FROM challenges WHERE id = %s",
-        (data["challenge_id"],)
+        (data["challenge_id"],),
     )
     challenge_info = cursor.fetchone()
 
