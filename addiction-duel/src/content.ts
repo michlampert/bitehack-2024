@@ -1,5 +1,4 @@
 console.log('Hello Content');
-let isForbidden = false;
 const userId = 1;
 
 function showPopupIfForbidden() {
@@ -11,10 +10,7 @@ function showPopupIfForbidden() {
         .then(data => {
             console.log('Response from server:', data);
             if (data.is_forbidden) {
-                isForbidden = true;
                 createPopup();
-            } else {
-                isForbidden = false;
             }
         })
         .catch(error => {
