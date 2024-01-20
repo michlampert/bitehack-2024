@@ -5,3 +5,11 @@ services:
       - "8000:5000"
   mysql:
     image: "mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: challenge_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./model.sql:/docker-entrypoint-initdb.d/model.sql
+    
