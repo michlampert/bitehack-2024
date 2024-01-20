@@ -42,6 +42,7 @@ def create_constraint(constraint, challenge_id, conn, cursor):
     )
     conn.commit()
 
+
 @app.route("/create-challenge", methods=["POST"])
 def create_challenge():
     data = request.json
@@ -161,7 +162,71 @@ def update_status():
     return jsonify({"message": "Status updated successfully"}), 201
 
 
-#@app.get("/website-
+@app.get("/is-forbidden")
+def is_forbidden():
+    data = request.json
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if "user_id" not in data:
+        return jsonify({"error": "Missing user_id field"}), 400
+    if "website" not in data:
+        return jsonify({"error": "Missing website field"}), 400
+
+    cursor.execute(
+        "SELECT title FROM challenges "
+        "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
+        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
+        (data["website"], data["user_id"],)
+    )
+    constraint_ids = cursor.fetchall()
+
+    return jsonify({"is_forbidden": len(constraint_ids) > 0}), 200
+
+
+@app.get("/get-challenge-status")
+def get_challenge_status():
+    data = request.json
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if "challenge_id" not in data:
+        return jsonify({"error": "Missing challenge_id field"}), 400
+
+    cursor.execute(
+        "SELECT username, total_time, time_limit, website FROM status "
+        "INNER JOIN constraints ON status.constraint_id = constraints.id "
+        "INNER JOIN users ON status.user_id = users.id "
+        "WHERE challenge_id = %s",
+    )
+    challenge_status = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT title, description, start, end FROM challenges WHERE id = %s",
+        (data["challenge_id"],)
+    )
+    challenge_info = cursor.fetchone()
+
+    result = {
+        "title": challenge_info[0],
+        "description": challenge_info[1],
+        "start": challenge_info[2],
+        "end": challenge_info[3],
+        "participants": {},
+    }
+
+    for constraint in challenge_status:
+        username, total_time, time_limit, website = constraint
+
+        if username not in result["participants"]:
+            result["participants"][username] = {
+                "failed": False,
+            }
+        if total_time > time_limit:
+            result["participants"][username]["failed"] = True
+
+    return jsonify(result), 200
 
 
 if __name__ == "__main__":
