@@ -7,7 +7,7 @@ services:
     image: "mysql"
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: challenge_db
+      MYSQL_DATABASE: events_db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:

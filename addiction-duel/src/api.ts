@@ -4,31 +4,65 @@ const URL: string = "http://localhost:8000/"
 
 
 export async function getEvents(id: string): Promise<Event[]> {
-    const f = (name: string): User => ({ name, status: "ok", progress: 80 })
-    const tmp: Event = {
-        name: "asd", freeTime: 180, users: [f("Michał"), f("Wojtek"), { name: "Tomek", status: "fail", progress: 60 }, f("Mati")], blacklist: ["youtube.com"], state: "inProgress",
-        startTime: new Date(),
-        endTime: new Date()
+    let response = await fetch(URL + "get-user-events?user_id=" + id);
+    let data = await response.json();
+
+    let events: Event[] = []
+    for (let i = 0; i < data.length; i++) {
+        let eventStatusResponse = await fetch(
+            URL + "get-event-status",
+            {
+                method: "GET",
+                body: JSON.stringify({ event_id: data[i].id })
+            }
+        );
+        let eventStatus = await eventStatusResponse.json();
+
+        let status: "planned" | "inProgress" | "done" = "planned"
+
+        if (new Date(data[i].end) < new Date()) {
+            status = "done"
+        } else if (new Date(data[i].start) > new Date()) {
+            status = "inProgress"
+        }
+
+        let event: Event = {
+            name: eventStatus[i].name,
+            startTime: eventStatus[i].start,
+            endTime: eventStatus[i].end,
+            freeTime: eventStatus[i].free_time,
+            users: eventStatus[i].users,
+            blacklist: eventStatus[i].blacklist,
+            state: status
+        }
+        events.push(event)
     }
     return [tmp, tmp, tmp]
 }
 
-export async function addEvent(): Promise<void> {
+export async function addEvent(name: string, description: string, totalTime: number, start: Date, freeTime: number, blacklist: string[]): Promise<void> {
     let response = await fetch(
-        URL + "add-challenge",
+        URL + "add-event",
         {
             method: "POST",
             body: JSON.stringify({
-                title: event.name,
-                start: event.time,
-                participants: event.users.map((user) => { return {user: user.name, failed: user.status == "fail"}}),
-                constraints: event.blacklist.map((url) => { return {url: url}})
+                name: name,
+                description: description,
+                total_time: totalTime,
+                start: start,
+                free_time: freeTime,
+                blacklist: blacklist
             })
         }
     );
-    let data = await response.json();
 }
 
-export async function addUserToEvent(id: string): Promise<void> {
-
+export async function addUserToEvent(eventId: number, userId: number): Promise<void> {
+    let response = await fetch(
+        URL + "add-participant",
+        {
+            method: "POST",
+            body: JSON.stringify({ event_id: eventId, user_id: userId })
+        }
+    );
 }
