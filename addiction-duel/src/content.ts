@@ -1,7 +1,55 @@
 console.log('Hello Content');
-if (window.location.href.includes("news.ycombinator.com")) {
-    console.log("On Hacker News!");
-    createPopup();
+let isForbidden = false;
+const userId = 1;
+
+function showPopupIfForbidden() {
+    const domain = window.location.hostname.replace(/^www\./, '');
+    const url = `http://localhost:8000/is-forbidden?user_id=${userId}&website=${domain}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response from server:', data);
+            if (data.is_forbidden) {
+                isForbidden = true;
+                createPopup();
+            } else {
+                isForbidden = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function updateStatus(close: boolean) {
+    const domain = window.location.hostname.replace(/^www\./, '');
+    const url = `http://localhost:8000/update-status`;
+
+    const data: { user_id: number; website: string;[key: string]: any } = {
+        user_id: userId,
+        website: domain
+    };
+
+    if (!close) {
+        data.url = window.location.href;
+    }
+
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response from server:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }
 
 
@@ -59,7 +107,12 @@ function createPopup() {
     ignoreButton.innerText = 'Ignore';
     setButtonStyle(ignoreButton);
     ignoreButton.onclick = function () {
+        updateStatus(false);
         popup.remove();
+        window.addEventListener("beforeunload", function () {
+            updateStatus(true);
+        });
+
     };
     buttonContainer.appendChild(ignoreButton);
 
@@ -81,5 +134,7 @@ function setButtonStyle(button: HTMLButtonElement) {
     button.style.color = '#f44336';
     button.style.fontWeight = 'bold';
 }
+
+showPopupIfForbidden();
 
 export { }

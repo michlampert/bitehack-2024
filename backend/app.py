@@ -4,8 +4,10 @@ import datetime
 from mysql.connector import Error
 
 from flask import Flask
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 db_config = {
     "host": "mysql",
@@ -126,6 +128,7 @@ def update_status():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
+    print("DATA", data)
 
     if "user_id" not in data:
         return jsonify({"error": "Missing user_id field"}), 400
@@ -133,7 +136,7 @@ def update_status():
         return jsonify({"error": "Missing website field"}), 400
 
     cursor.execute(
-        "SELECT id, last_started FROM status "
+        "SELECT status.id, last_started FROM status "
         "INNER JOIN constraints ON status.constraint_id = constraints.id "
         "INNER JOIN challenges ON constraints.challenge_id = challenges.id "
         "WHERE start < NOW() and end > NOW() and user_id = %s AND website = %s",
@@ -154,14 +157,11 @@ def update_status():
                 ),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(
-                status[1]
-            )
+            difference = datetime.datetime.now() - status[1]
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
                 (
-                    data["website"],
                     difference.total_seconds(),
                     status[0],
                 ),
