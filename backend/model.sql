@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS status(
     constraint_id int,
     reason text NOT NULL default (''),
     last_started timestamp,
-    total_time int,
+    total_time int default (0),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (constraint_id) REFERENCES constraints(id)
 );
