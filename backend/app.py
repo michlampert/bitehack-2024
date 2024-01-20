@@ -4,8 +4,10 @@ import datetime
 from mysql.connector import Error
 
 from flask import Flask
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 db_config = {
     "host": "mysql",
@@ -42,6 +44,7 @@ def create_constraint(constraint, challenge_id, conn, cursor):
     )
     conn.commit()
 
+
 @app.route("/create-challenge", methods=["POST"])
 def create_challenge():
     data = request.json
@@ -58,13 +61,13 @@ def create_challenge():
         return jsonify({"error": "Missing total_time field"}), 400
     if "start" not in data:
         return jsonify({"error": "Missing start field"}), 400
-
-    end = datetime.datetime.fromisoformat(data["start"])
-    end += datetime.timedelta(seconds=data["total_time"])
+    start = datetime.datetime.fromisoformat(data["start"])
+    start = start.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=0)))
+    end = start + datetime.timedelta(seconds=data["total_time"])
 
     cursor.execute(
         "INSERT INTO challenges (title, description, start, end) VALUES (%s, %s, %s, %s)",
-        (data["title"], data["description"], data["start"], end),
+        (data["title"], data["description"], start, end),
     )
     conn.commit()
 
@@ -85,12 +88,11 @@ def create_user():
     if "name" not in data:
         return jsonify({"error": "Missing name field"}), 400
 
-    cursor.execute(
-        "INSERT INTO users (username) VALUES (%s)", (data["name"],)
-    )
+    cursor.execute("INSERT INTO users (username) VALUES (%s)", (data["name"],))
     conn.commit()
+    user_id = cursor.lastrowid
 
-    return jsonify({"message": "User created successfully"}), 201
+    return jsonify({"user_id": user_id}), 201
 
 
 @app.route("/add-participant", methods=["POST"])
@@ -112,7 +114,10 @@ def add_participant():
     for constraint_id in challenge_constaints_id:
         cursor.execute(
             "INSERT INTO status (user_id, constraint_id) VALUES (%s, %s)",
-            (data["user_id"], constraint_id[0],)
+            (
+                data["user_id"],
+                constraint_id[0],
+            ),
         )
         conn.commit()
 
@@ -124,6 +129,7 @@ def update_status():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
+    print("DATA", data)
 
     if "user_id" not in data:
         return jsonify({"error": "Missing user_id field"}), 400
@@ -131,11 +137,14 @@ def update_status():
         return jsonify({"error": "Missing website field"}), 400
 
     cursor.execute(
-        "SELECT id, last_started FROM status "
+        "SELECT status.id, last_started FROM status "
         "INNER JOIN constraints ON status.constraint_id = constraints.id "
         "INNER JOIN challenges ON constraints.challenge_id = challenges.id "
         "WHERE start < NOW() and end > NOW() and user_id = %s AND website = %s",
-        (data["user_id"], data["website"],)
+        (
+            data["user_id"],
+            data["website"],
+        ),
     )
     statuses = cursor.fetchall()
 
@@ -143,25 +152,123 @@ def update_status():
         if status[1] is None:
             cursor.execute(
                 "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (data["url"] if "url" in data else data["website"], status[0],)
+                (
+                    data["url"] if "url" in data else data["website"],
+                    status[0],
+                ),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(status[1])
+            difference = datetime.datetime.now() - status[1]
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
-                (data["website"], difference.total_seconds(), status[0],)
+                (
+                    difference.total_seconds(),
+                    status[0],
+                ),
             )
         else:
             cursor.execute(
                 "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (data["url"], status[0],)
+                (
+                    data["url"],
+                    status[0],
+                ),
             )
     conn.commit()
     return jsonify({"message": "Status updated successfully"}), 201
 
 
-#@app.get("/website-
+@app.get("/is-forbidden")
+def is_forbidden():
+    user_id = request.args.get("user_id")
+    website = request.args.get("website")
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if not user_id:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+    if not website:
+        return jsonify({"error": "Missing website parameter"}), 400
+
+    cursor.execute(
+        "SELECT title FROM challenges "
+        "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
+        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
+        (
+            website,
+            user_id,
+        ),
+    )
+    constraint_ids = cursor.fetchall()
+
+    return jsonify({"is_forbidden": len(constraint_ids) > 0}), 200
+
+
+@app.get("/get-challenge-status")
+def get_challenge_status():
+    data = request.json
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if "challenge_id" not in data:
+        return jsonify({"error": "Missing challenge_id field"}), 400
+
+    cursor.execute(
+        "SELECT username, total_time, time_limit, website FROM status "
+        "INNER JOIN constraints ON status.constraint_id = constraints.id "
+        "INNER JOIN users ON status.user_id = users.id "
+        "WHERE challenge_id = %s",
+        (data["challenge_id"],),
+    )
+    challenge_status = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT title, description, start, end FROM challenges WHERE id = %s",
+        (data["challenge_id"],),
+    )
+    challenge_info = cursor.fetchone()
+
+    result = {
+        "title": challenge_info[0],
+        "description": challenge_info[1],
+        "start": challenge_info[2],
+        "end": challenge_info[3],
+        "participants": {},
+    }
+
+    for constraint in challenge_status:
+        username, total_time, time_limit, website = constraint
+
+        if username not in result["participants"]:
+            result["participants"][username] = {
+                "failed": False,
+            }
+        if total_time > time_limit:
+            result["participants"][username]["failed"] = True
+
+    return jsonify(result), 200
+
+
+@app.get("/get-user-challenges")
+def get_user_challenges():
+    if "user_id" not in request.args:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT c.id, c.title, c.description, c.start, c.end FROM constraints "
+        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "INNER JOIN challenges as c ON constraints.challenge_id = c.id "
+        "WHERE user_id = %s",
+        (request.args["user_id"],),
+    )
+    challenges = cursor.fetchall()
+
+    return jsonify(challenges), 200
 
 
 if __name__ == "__main__":

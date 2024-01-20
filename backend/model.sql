@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS challenges(
     title varchar(255) NOT NULL,
     description text NOT NULL,
     start timestamp NOT NULL,
-    end timestamp NOT NULL,
+    end timestamp NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users(
@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS status(
     id int AUTO_INCREMENT PRIMARY KEY,
     user_id int,
     constraint_id int,
-    reason text NOT NULL default '',
+    reason text NOT NULL default (''),
     last_started timestamp,
-    total_time int,
+    total_time int default (0),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (constraint_id) REFERENCES constraints(id)
 );

@@ -1,9 +1,24 @@
-import React from 'react'
-import CreateEvent from '../../components/CreateEvent'
+import React, { useState } from 'react'
 
-function App() {
+import EventComponent from '../../components/Event'
+import TopBarComponent from '../../components/TopBar'
+import EventInputComponent from '../../components/EventInput'
+import { Event } from '../../model'
+
+import './App.css'
+import { getEvents } from '../../api'
+
+export default function App() {
+
+  const [events, setEvents] = useState<Event[]>([])
+
+  getEvents("user_id").then(setEvents)
+
   return <>
+    <TopBarComponent />
+    <EventInputComponent />
+    {
+      events.map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
+    }
   </>
 }
-
-export default App
