@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 import mysql.connector
 import datetime
 from mysql.connector import Error
+import requests
+from bs4 import BeautifulSoup
+import json
 
 from flask import Flask
 from flask_cors import CORS
@@ -25,6 +28,28 @@ def db_connection():
         print(e)
         raise e
     return conn
+
+
+def extract_metadata_from_url(url: str):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+
+        # Parse the content with BeautifulSoup
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Find the title tag
+        title = soup.find("title").string
+
+        # Try to get the thumbnail from Open Graph meta tag
+        thumbnail_url = None
+        og_image = soup.find("meta", property="og:image")
+        if og_image:
+            thumbnail_url = og_image.get("content")
+
+        return {"title": title, "thumbnail_url": thumbnail_url}
+    except Exception as e:
+        return {}
 
 
 @app.route("/")
@@ -129,7 +154,6 @@ def update_status():
     data = request.json
     conn = db_connection()
     cursor = conn.cursor()
-    print("DATA", data)
 
     if "user_id" not in data:
         return jsonify({"error": "Missing user_id field"}), 400
@@ -149,11 +173,16 @@ def update_status():
     statuses = cursor.fetchall()
 
     for status in statuses:
+        metadata = {"website": data["website"]}
+        if "url" in data and data["url"] is not None:
+            metadata = extract_metadata_from_url(data["url"])
+            metadata["url"] = data["url"]
+        metadata_str = json.dumps(metadata)
         if status[1] is None:
             cursor.execute(
                 "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
                 (
-                    data["url"] if "url" in data else data["website"],
+                    metadata_str,
                     status[0],
                 ),
             )
@@ -171,7 +200,7 @@ def update_status():
             cursor.execute(
                 "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
                 (
-                    data["url"],
+                    metadata_str,
                     status[0],
                 ),
             )
@@ -205,6 +234,28 @@ def is_forbidden():
 
     return jsonify({"is_forbidden": len(constraint_ids) > 0}), 200
 
+@app.get("/get-history")
+def get_history():
+    user_id = request.args.get("user_id")
+    event_id = request.args.get("event_id")
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if not user_id or not event_id:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+
+    cursor.execute(
+        "SELECT reason FROM challenges "
+        "INNER JOIN constraints ON constraints.challenge_id = challenges.id "
+        "INNER JOIN status ON status.constraint_id = constraints.id "
+        "WHERE user_id = %s",
+        (
+            user_id,
+        ),
+    )
+    history = cursor.fetchall()
+
+    return jsonify(history), 200
 
 @app.get("/get-challenge-status")
 def get_challenge_status():

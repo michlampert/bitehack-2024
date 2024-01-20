@@ -1,14 +1,14 @@
 
-host=$1
-port=5000
+host=localhost
+port=8000
 
 curl -X POST -H "Content-Type: application/json" -d '{"name":"tmek"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"wojtek"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"mateusz"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"michal"}' "http://$host:$port/create-user"
 
-curl -X POST -H "Content-Type: application/json" -d '{  "title": "Sample Challenge", "description": "This is a sample challenge description", "constraints": [{"time_limit": 1, "website": "youtube.com"}], "total_time": 10800, "start": "2024-01-20T18:11:54" }' "http://$host:$port/create-challenge"
-curl -X POST -H "Content-Type: application/json" -d '{  "title": "Another Challenge", "description": "This is different challenge", "constraints": [{"time_limit": 0, "website": "youtube.com"}], "total_time": 3600, "start": "2024-01-20T20:11:54" }' "http://$host:$port/create-challenge"
+curl -X POST -H "Content-Type: application/json" -d '{  "title": "Sample Challenge", "description": "This is a sample challenge description", "constraints": [{"time_limit": 1, "website": "youtube.com"}], "total_time": 108000, "start": "2024-01-20T18:11:54" }' "http://$host:$port/create-challenge"
+curl -X POST -H "Content-Type: application/json" -d '{  "title": "Another Challenge", "description": "This is different challenge", "constraints": [{"time_limit": 0, "website": "youtube.com"}], "total_time": 36000, "start": "2024-01-20T20:11:54" }' "http://$host:$port/create-challenge"
 
 
 curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 1}' "http://$host:$port/add-participant"
