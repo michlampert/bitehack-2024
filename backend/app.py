@@ -174,7 +174,6 @@ def update_status():
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
                 (
-                    data["website"],
                     difference.total_seconds(),
                     status_id,
                 ),
@@ -283,16 +282,13 @@ def get_event_status():
         else:
             additional_time = 0
 
-        # TODO: calculate progress between (0, 100)
-        progress = 0
+        progress = total_time + additional_time
 
         result["users"].append(
             {
                 "name": username,
                 "progress": progress,
-                "status": "ok"
-                if event_info[4] < total_time + additional_time
-                else "fail",
+                "status": "ok" if event_info[4] < progress else "fail",
             }
         )
 
