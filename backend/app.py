@@ -325,7 +325,7 @@ def get_user_event_statuses():
         "SELECT total_time, last_started, event.name, event.free_time FROM status "
         "INNER JOIN event ON event.id = status.event_id "
         "INNER JOIN blacklist ON blacklist.event_id = event.id "
-        "WHERE status.user_id = %s AND blacklist.website = %s",
+        "WHERE start < NOW() and end > NOW() and status.user_id = %s AND blacklist.website = %s",
         (user_id, website),
     )
     event_status = cursor.fetchall()
