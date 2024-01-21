@@ -15,6 +15,19 @@ import copy from 'copy-text-to-clipboard';
 export default function EventComponent(props: { event: Event }) {
 
     const [open, setOpen] = React.useState(false);
+    const [timeLeft, setTimeLeft] = React.useState<number>();
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            const now = new Date();
+            const endTime = new Date(props.event.endTime);
+            const diff = endTime.getTime() - now.getTime();
+
+            setTimeLeft(Math.max(0, diff));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [props.event.endTime]);
 
     return <>
         <Accordion>
@@ -25,7 +38,7 @@ export default function EventComponent(props: { event: Event }) {
             >
                 <Box sx={{ width: '100%' }}>
                     <Stack spacing={1}>
-                        <Stack direction="row" justifyContent="left" alignItems="center" spacing={1}>
+                        <Stack direction="row" justifyContent="left" alignItems="center" spacing={2}>
                             <Typography gutterBottom variant="h5" component="div">
                                 {`${props.event.name} #${props.event.id}`}
                             </Typography>
@@ -36,6 +49,13 @@ export default function EventComponent(props: { event: Event }) {
                                         <EventIcon color="primary" /> :
                                         <HourglassTopIcon color="primary" />
 
+                            }
+                            {
+                                props.event.state === "inProgress" ?
+                                    <Typography variant="body1">
+                                        Time left: {Math.floor((timeLeft ?? 0) / 1000 / 60)}:{Math.floor((timeLeft ?? 0) / 1000 % 60)}
+                                    </Typography> :
+                                    <></>
                             }
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
