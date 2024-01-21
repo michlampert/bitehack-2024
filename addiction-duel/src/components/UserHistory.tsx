@@ -1,29 +1,45 @@
-import React from 'react';
-import { List, ListItem, ListItemIcon, ListItemText, Avatar } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { List, ListItem, ListItemText, ListItemAvatar, Avatar, Typography } from '@mui/material';
 
 interface HistoryItem {
-    id: number;
+    thumbnail_url: string;
+    title: string;
     url: string;
 }
 
-const getFaviconUrl = (url: string): string => {
-    const urlObj = new URL(url);
-    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}`;
-};
+const HistoryList: React.FC = () => {
+    const [items, setItems] = useState<HistoryItem[]>([]);
 
-const HistoryList: React.FC<{ historyItems: HistoryItem[] }> = ({ historyItems }) => {
+    useEffect(() => {
+        // Replace with your actual endpoint
+        fetch('http://localhost:8000/get-history?user_id=1&event_id=1')
+            .then(response => response.json())
+            .then((data: HistoryItem[]) => {
+                setItems(data);
+            })
+            .catch(error => {
+                console.error('Error fetching data: ', error);
+            });
+    }, []);
+
     return (
-        <List>
-            {historyItems.map((item) => (
-                <ListItem key={item.id}>
-                    <ListItemIcon>
-                        <Avatar alt="Site Icon" src={getFaviconUrl(item.url)} />
-                    </ListItemIcon>
-                    <ListItemText primary={item.url} />
-                </ListItem>
-            ))}
-        </List>
+        <div>
+            <Typography variant="h4" gutterBottom sx={{ margin: '20px' }}>
+                History
+            </Typography>
+            <List>
+                {items.map((item, index) => (
+                    <ListItem key={index} alignItems="flex-start" component="a" href={item.url} target="_blank" rel="noopener noreferrer">
+                        <ListItemAvatar>
+                            <Avatar alt={item.title} src={item.thumbnail_url} />
+                        </ListItemAvatar>
+                        <ListItemText primary={item.title} />
+                    </ListItem>
+                ))}
+            </List>
+        </div>
     );
-};
+}
 
 export default HistoryList;
+
