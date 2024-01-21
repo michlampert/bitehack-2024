@@ -290,7 +290,7 @@ def get_event_status():
             {
                 "name": username,
                 "progress": progress,
-                "status": "ok" if free_time < progress else "fail",
+                "status": "ok" if free_time >= (total_time + additional_time)/60 else "fail",
             }
         )
 
