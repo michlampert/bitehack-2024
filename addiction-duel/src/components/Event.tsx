@@ -69,7 +69,10 @@ export default function EventComponent(props: { event: Event }) {
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {                                                                     //TODO url.split['.'[0]
-                                props.event.blacklist.map(url => <Chip icon={<SocialIcon network={url} style={{ height: 25, width: 25 }} />} label={url} />)
+                                props.event.blacklist.map(url => {
+                                    const domain = url.toString().split('.')[0];
+                                    return <Chip icon={<SocialIcon network={domain} style={{ height: 25, width: 25 }} />} label={url} />
+                                })
                             }
                         </Stack>
                     </Stack>
