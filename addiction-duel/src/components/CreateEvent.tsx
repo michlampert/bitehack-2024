@@ -6,6 +6,8 @@ import { LocalizationProvider, TimePicker, renderTimeViewClock } from '@mui/x-da
 import AddIcon from '@mui/icons-material/Add';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import dayjs from "dayjs";
+import { addUserToEvent } from "../api";
+import { getId } from "../utils";
 
 export default function CreateEvent() {
     const [blacklist, setBlacklist] = useState<string[]>([])
@@ -26,6 +28,8 @@ export default function CreateEvent() {
     }
 
     const scheduleEvent = (() => {
+        // TODO
+        getId().then(addUserToEvent)
     })
 
     return <Container maxWidth="sm">

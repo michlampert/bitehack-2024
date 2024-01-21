@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { TextField, Button, Stack } from '@mui/material';
+import { TextField, Button, Stack, Container } from '@mui/material';
 
 const EventInputComponent: React.FC = () => {
     const [inputValue, setInputValue] = useState<string>('');
@@ -38,13 +38,12 @@ const EventInputComponent: React.FC = () => {
         }
     };
 
-    return (
-        <Stack>
-            <TextField type="number" label="Event ID" onChange={handleInputChange} fullWidth InputProps={{inputProps: {min: 0}}} />
+    return <Container maxWidth="sm">
+        <Stack direction="column" spacing={2}>
+            <TextField type="number" label="Event ID" onChange={handleInputChange} fullWidth InputProps={{ inputProps: { min: 0 } }} />
             <Button onClick={() => handleSubmit}> Join event</Button>
         </Stack>
-
-    );
+    </Container>
 };
 
 export default EventInputComponent;
