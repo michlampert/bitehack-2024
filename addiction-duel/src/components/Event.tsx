@@ -9,6 +9,7 @@ import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import EventIcon from '@mui/icons-material/Event';
 import MailIcon from '@mui/icons-material/Mail';
 import EditIcon from '@mui/icons-material/Edit';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { SocialIcon } from 'react-social-icons';
 import copy from 'copy-text-to-clipboard';
 
@@ -38,7 +39,7 @@ export default function EventComponent(props: { event: Event }) {
             >
                 <Box sx={{ width: '100%' }}>
                     <Stack spacing={1}>
-                        <Stack direction="row" justifyContent="left" alignItems="center" spacing={2}>
+                        <Stack direction="row" alignItems="center" spacing={2}>
                             <Typography gutterBottom variant="h5" component="div">
                                 {`${props.event.name} #${props.event.id}`}
                             </Typography>
@@ -52,9 +53,12 @@ export default function EventComponent(props: { event: Event }) {
                             }
                             {
                                 props.event.state === "inProgress" ?
-                                    <Typography variant="body1">
-                                        Time left: {Math.floor((timeLeft ?? 0) / 1000 / 60)}:{Math.floor((timeLeft ?? 0) / 1000 % 60)}
-                                    </Typography> :
+                                <Box display="flex" alignItems="center">
+                                <AccessTimeIcon color="action" />
+                                <Typography variant="body1" sx={{ ml: 1 }}>
+                                    {String(Math.floor((timeLeft ?? 0) / 1000 / 60)).padStart(2, '0')}:{String(Math.floor((timeLeft ?? 0) / 1000 % 60)).padStart(2, '0')}
+                                </Typography>
+                            </Box> :
                                     <></>
                             }
                         </Stack>
@@ -65,7 +69,10 @@ export default function EventComponent(props: { event: Event }) {
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {                                                                     //TODO url.split['.'[0]
-                                props.event.blacklist.map(url => <Chip icon={<SocialIcon network={url} style={{ height: 25, width: 25 }} />} label={url} />)
+                                props.event.blacklist.map(url => {
+                                    const domain = url.toString().split('.')[0];
+                                    return <Chip icon={<SocialIcon network={domain} style={{ height: 25, width: 25 }} />} label={url} />
+                                })
                             }
                         </Stack>
                     </Stack>

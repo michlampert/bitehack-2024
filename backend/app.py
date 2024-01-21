@@ -290,7 +290,7 @@ def get_event_status():
             {
                 "name": username,
                 "progress": progress,
-                "status": "ok" if free_time < progress else "fail",
+                "status": "ok" if free_time >= (total_time + additional_time)/60 else "fail",
             }
         )
 
@@ -311,43 +311,6 @@ def get_user_events():
     event_ids = cursor.fetchall()
 
     return jsonify(event_ids), 200
-
-
-@app.get("/get-user-event-statuses")
-def get_user_event_statuses():
-    if "user_id" not in request.args:
-        return jsonify({"error": "Missing user_id parameter"}), 400
-    user_id = request.args.get("user_id")
-    website = request.args.get("website")
-
-    conn = db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT total_time, last_started, event.name, event.free_time FROM status "
-        "INNER JOIN event ON event.id = status.event_id "
-        "INNER JOIN blacklist ON blacklist.event_id = event.id "
-        "WHERE start < NOW() and end > NOW() and status.user_id = %s AND blacklist.website = %s",
-        (user_id, website),
-    )
-    event_status = cursor.fetchall()
-
-    result = []
-    for status in event_status:
-        total_time, last_started, event_name, free_time = status
-
-        if last_started is not None:
-            additional_time = (datetime.datetime.now() - last_started).total_seconds()
-        else:
-            additional_time = 0
-
-        progress = min((total_time + additional_time) / 60, free_time)
-        time_left = free_time - progress
-        status_result = {"name": event_name, "time_left": time_left}
-        if status_result not in result:
-            result.append(status_result)
-
-    return jsonify(result), 200
 
 
 @app.get("/get-failed-users")
@@ -384,7 +347,7 @@ def get_failed_users():
         else:
             additional_time = 0
 
-        progress = (total_time + additional_time) / 60
+        progress = total_time + additional_time
         user = {"userId": user_id, "username": username}
         if event_info[4] < progress and user not in result:
             result.append(user)
