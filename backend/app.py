@@ -174,6 +174,7 @@ def is_forbidden():
     cursor.execute(
         "SELECT name FROM event "
         "INNER JOIN blacklist ON blacklist.event_id = event.id "
+        "INNER JOIN status ON status.event_id = event.id "
         "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
         (
             website,
