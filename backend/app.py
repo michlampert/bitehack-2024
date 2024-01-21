@@ -245,7 +245,7 @@ def get_event_status():
     conn = db_connection()
     cursor = conn.cursor()
 
-    if not "event_id":
+    if not event_id:
         return jsonify({"error": "Missing event_id field"}), 400
 
     cursor.execute(
@@ -262,9 +262,7 @@ def get_event_status():
     )
     event_info = cursor.fetchone()
 
-    cursor.execute(
-        "SELECT website FROM blacklist WHERE event_id = %s", (event_id,)
-    )
+    cursor.execute("SELECT website FROM blacklist WHERE event_id = %s", (event_id,))
     blacklist = cursor.fetchall()
 
     result = {
@@ -281,13 +279,11 @@ def get_event_status():
         username, total_time, last_started = status
 
         if last_started is not None:
-            additional_time = (
-                datetime.datetime.now() - datetime.datetime.fromisoformat(last_started)
-            ).total_seconds()
+            additional_time = (datetime.datetime.now() - last_started).total_seconds()
         else:
             additional_time = 0
 
-        #TODO: calculate progress between (0, 100)
+        # TODO: calculate progress between (0, 100)
         progress = 0
 
         result["users"].append(

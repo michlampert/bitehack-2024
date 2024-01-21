@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { TextField, Button, Stack, Container } from '@mui/material';
 import { getEvent } from '../api';
 import { Event } from '../model';
+import { getId } from '../utils';
 
 const EventInputComponent: React.FC<{ onEventJoin: (event: Event) => void }> = ({ onEventJoin }) => {
     const [inputValue, setInputValue] = useState<string>('');
@@ -20,19 +21,18 @@ const EventInputComponent: React.FC<{ onEventJoin: (event: Event) => void }> = (
         }
 
         try {
+            const user_id = await getId();
             const response = await fetch('http://localhost:8000/add-participant', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ event_id: eventId, user_id: 1 }),
+                body: JSON.stringify({ event_id: eventId, user_id: user_id }),
             });
 
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
-            const data = await response.json();
 
             let newEvent = await getEvent(eventId);
 

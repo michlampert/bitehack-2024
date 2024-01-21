@@ -5,7 +5,12 @@ const URL: string = "http://localhost:8000/"
 
 export async function getEvent(id: number): Promise<Event> {
     let eventStatusResponse = await fetch(
-        URL + "get-event-status?event_id=" + id
+        URL + "get-event-status?event_id=" + id,
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
     );
     let eventStatus = await eventStatusResponse.json();
     let state: "inProgress" | "done" | "future" = "future"
