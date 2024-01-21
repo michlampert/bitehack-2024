@@ -282,12 +282,15 @@ def get_event_status():
         else:
             additional_time = 0
 
-        progress = (total_time + additional_time) / 60 / (event_info[4])
+        free_time = event_info[4]
+        progress = min((total_time + additional_time) / 60, free_time)
+        progress = progress / free_time * 100
+
         result["users"].append(
             {
                 "name": username,
                 "progress": progress,
-                "status": "ok" if event_info[4] >= total_time + additional_time  else "fail",
+                "status": "ok" if free_time < progress else "fail",
             }
         )
 
