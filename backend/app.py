@@ -242,29 +242,29 @@ def get_history():
 
 @app.get("/get-event-status")
 def get_event_status():
-    data = request.json
+    event_id = request.args.get("event_id")
     conn = db_connection()
     cursor = conn.cursor()
 
-    if "event_id" not in data:
+    if not "event_id":
         return jsonify({"error": "Missing event_id field"}), 400
 
     cursor.execute(
         "SELECT username, total_time, last_started FROM status "
         "INNER JOIN users ON status.user_id = users.id "
         "WHERE event_id = %s",
-        (data["event_id"],),
+        (event_id,),
     )
     event_status = cursor.fetchall()
 
     cursor.execute(
         "SELECT name, description, start, end, free_time FROM event WHERE id = %s",
-        (data["event_id"],),
+        (event_id,),
     )
     event_info = cursor.fetchone()
 
     cursor.execute(
-        "SELECT website FROM blacklist WHERE event_id = %s", (data["event_id"],)
+        "SELECT website FROM blacklist WHERE event_id = %s", (event_id,)
     )
     blacklist = cursor.fetchall()
 

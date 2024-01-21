@@ -10,14 +10,9 @@ export async function getEvents(id: string): Promise<Event[]> {
     let events: Event[] = []
     for (let i = 0; i < data.length; i++) {
         let eventStatusResponse = await fetch(
-            URL + "get-event-status",
-            {
-                method: "GET",
-                body: JSON.stringify({ event_id: data[i] })
-            }
+            URL + "get-event-status?event_id=" + data[i][0]
         );
         let eventStatus = await eventStatusResponse.json();
-
         let state: "inProgress" | "done" | "future" = "future"
 
         if (eventStatus.end < Date.now()) {
@@ -27,7 +22,7 @@ export async function getEvents(id: string): Promise<Event[]> {
         }
 
         let event: Event = {
-            id: data[i],
+            id: data[i][0],
             name: eventStatus.name,
             startTime: new Date(eventStatus.start),
             endTime: new Date(eventStatus.end),
@@ -36,6 +31,8 @@ export async function getEvents(id: string): Promise<Event[]> {
             blacklist: eventStatus.blacklist,
             state: state
         }
+
+        events.push(event)
     }
 
     return events

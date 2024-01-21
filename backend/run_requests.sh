@@ -17,6 +17,6 @@ curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 
 
 curl -X POST -H "Content-Type: application/json" -d '{"event_id": 2, "user_id": 1}' "http://$host:$port/add-participant"
 
-curl -X GET -H "Content-Type: application/json" -d '{"event_id": "1"}' http://$host:$port/get-event-status
+curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-event-status?event_id=1"
 
 curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-user-events?user_id=1"

@@ -40,7 +40,7 @@ function main() {
 
 // async function test() {
 //     console.log('test');
-//     const events = await getEvents(userId.toString());
+//     const events = await getEvents("1");
 //     console.log(events);
 // }
 // test();
