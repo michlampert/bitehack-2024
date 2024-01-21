@@ -6,7 +6,7 @@ let userId: number;
 function main() {
     chrome.storage.local.get("user_id", function (result) {
         if (result.user_id) {
-            userId = 1; // result.user_id;
+            userId = result.user_id;
             showPopupIfForbidden();
         } else {
             const url = `http://localhost:8000/create-user`;
@@ -36,6 +36,19 @@ function main() {
     });
 }
 
+function getUserEventStatusesShowPopup() {
+    const domain = window.location.hostname.replace(/^www\./, '');
+    const url = `http://localhost:8000/get-user-event-statuses?user_id=${userId}&website=${domain}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response from server:', data);
+            createPopup(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
 
 function showPopupIfForbidden() {
     const domain = window.location.hostname.replace(/^www\./, '');
@@ -46,7 +59,7 @@ function showPopupIfForbidden() {
         .then(data => {
             console.log('Response from server:', data);
             if (data.is_forbidden) {
-                createPopup();
+                getUserEventStatusesShowPopup();
             }
         })
         .catch(error => {
@@ -83,8 +96,12 @@ function updateStatus(close: boolean) {
         });
 }
 
+interface UserEventStatus {
+    name: string;
+    time_left: number;
+}
 
-function createPopup() {
+function createPopup(data: UserEventStatus[]) {
     // Create a new div element for the popup
     var popup = document.createElement('div');
 
@@ -125,9 +142,13 @@ function createPopup() {
     title.style.fontSize = '30px';
     popup.appendChild(title);
 
+
     // Create and style the description
+    const event_description = data.map(event => {
+        return `${event.name} - time left: ${event.time_left} min`;
+    }).join('\n')
     var description = document.createElement('p');
-    description.innerText = 'Remember about the challenges.';
+    description.innerText = 'Remember about the challenges.\n\n' + event_description;
     description.style.fontSize = '20px';
     popup.appendChild(description);
 

@@ -27,7 +27,7 @@ export default function EventComponent(props: { event: Event }) {
                     <Stack spacing={1}>
                         <Stack direction="row" justifyContent="left" alignItems="center" spacing={1}>
                             <Typography gutterBottom variant="h5" component="div">
-                                {props.event.name}
+                                {`${props.event.name} #${props.event.id}`}
                             </Typography>
                             {
                                 props.event.state === "done" ?
@@ -40,12 +40,12 @@ export default function EventComponent(props: { event: Event }) {
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {
-                                props.event.users.map(u => <Chip icon={<FaceIcon />} label={u.name} {...(u.status !== "ok" ? { disabled: true } : {})} />)
+                                props.event.users.slice(0, 5).map(u => <Chip icon={<FaceIcon />} label={u.name} {...(u.status !== "ok" ? { disabled: true } : {})} />)
                             }
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {                                                                     //TODO url.split['.'[0]
-                                props.event.blacklist.map(url => <Chip icon={<SocialIcon  network={url} style={{height: 25, width: 25}}/>} label={url} />)
+                                props.event.blacklist.map(url => <Chip icon={<SocialIcon network={url} style={{ height: 25, width: 25 }} />} label={url} />)
                             }
                         </Stack>
                     </Stack>
