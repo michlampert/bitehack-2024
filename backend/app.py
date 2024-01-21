@@ -282,13 +282,15 @@ def get_event_status():
         else:
             additional_time = 0
 
-        progress = total_time + additional_time
+        progress = (total_time + additional_time) / (event_info[4])
+        import sys
+        print(progress, total_time, additional_time, event_info[4], file=sys.stderr)
 
         result["users"].append(
             {
                 "name": username,
                 "progress": progress,
-                "status": "ok" if event_info[4] < progress else "fail",
+                "status": "ok" if event_info[4] >= total_time + additional_time  else "fail",
             }
         )
 

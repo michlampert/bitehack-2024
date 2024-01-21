@@ -59,7 +59,7 @@ export default function Home() {
                     {
                         events.filter(e => e.state !== 'done' || showOldEvents).map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
                     }
-                    <Button onClick={handleShowOldEvents}>{showOldEvents ? 'Hide' : 'Show'} old events</Button> {/* New button */}
+                    <Button onClick={handleShowOldEvents} variant="outlined" sx={{ mt: 3 }}>{showOldEvents ? 'Hide' : 'Show'} old events</Button> {/* New button */}
                 </Container>
                 <Stack spacing={2}>
                     <Typography gutterBottom variant="h5" component="div">
