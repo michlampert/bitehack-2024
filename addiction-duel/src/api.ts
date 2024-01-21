@@ -11,6 +11,7 @@ export async function getEvents(id: string): Promise<Event[]> {
     let data = await response.json();
 
     let events: Event[] = []
+    console.log(data)
     for (let i = 0; i < data.length; i++) {
         let eventStatusResponse = await fetch(
             URL + "get-event-status",
