@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 import EventComponent from '../../components/Event'
 import EventInputComponent from '../../components/EventInput'
@@ -11,9 +11,19 @@ import { getId } from '../../utils'
 
 export default function Home() {
 
-    const [events, setEvents] = useState<Event[]>([])
+    const [events, setEvents] = useState<Event[]>([]);
+    useEffect(() => {
+        (async () => {
+            const id = await getId();
+            const events = await getEvents(id);
+            setEvents(events);
+        })();
+    }, []);
 
-    getId().then(getEvents).then(setEvents)
+    const handleEventCreated = (newEvent: Event) => {
+        console.log("Event created");
+        setEvents(prevEvents => [...prevEvents, newEvent]);
+    };
 
     return <>
         <Container sx={{ mt: 5 }}>
@@ -27,11 +37,11 @@ export default function Home() {
                     <Typography gutterBottom variant="h5" component="div">
                         Create new challenge!
                     </Typography>
-                    <CreateEvent></CreateEvent>
+                    <CreateEvent onEventCreated={handleEventCreated}></CreateEvent>
                     <Typography gutterBottom variant="h5" component="div">
                         ...or just join existing one
                     </Typography>
-                    <EventInputComponent />
+                    <EventInputComponent onEventJoin={handleEventCreated} />
                 </Stack>
             </Stack>
         </Container>

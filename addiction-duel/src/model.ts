@@ -1,11 +1,11 @@
 export interface User {
-    name: string,
+    name: number,
     status: "ok" | "fail",
     progress?: number,
 }
 
 export interface Event {
-    id: string,
+    id: number,
     name: string,
     startTime: Date,
     endTime: Date,

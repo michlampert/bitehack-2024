@@ -44,8 +44,8 @@ export default function EventComponent(props: { event: Event }) {
                             }
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
-                            {
-                                props.event.blacklist.map(url => <Chip icon={<SocialIcon  network={url.split('.')[0]} style={{height: 25, width: 25}}/>} label={url} />)
+                            {                                                                     //TODO url.split['.'[0]
+                                props.event.blacklist.map(url => <Chip icon={<SocialIcon  network={url} style={{height: 25, width: 25}}/>} label={url} />)
                             }
                         </Stack>
                     </Stack>
@@ -53,7 +53,7 @@ export default function EventComponent(props: { event: Event }) {
             </AccordionSummary>
             <AccordionDetails>
                 <Stack spacing={3}>
-                    {props.event.users.map((u, id) => <ProgressWithLabel key={id} label={u.name} value={u.progress ? u.progress : 0} status={u.status} />)}
+                    {props.event.users.map((u, id) => <ProgressWithLabel key={id} label={u.name.toString()} value={u.progress ? u.progress : 0} status={u.status} />)}
                     <Stack direction="row" spacing={2} justifyContent="right">
                         {
                             props.event.state === "inProgress" ?
@@ -65,7 +65,7 @@ export default function EventComponent(props: { event: Event }) {
                         {
                             props.event.state === "inProgress" ?
                                 <Button variant="outlined" endIcon={<MailIcon />} onClick={() => {
-                                    copy(props.event.id)
+                                    copy(props.event.id.toString())
                                     setOpen(true)
                                     setInterval(() => setOpen(false), 2000)
                                 }}>

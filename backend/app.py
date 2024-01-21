@@ -67,8 +67,8 @@ def create_event():
         return jsonify({"error": "Missing name field"}), 400
     if "description" not in data:
         return jsonify({"error": "Missing description field"}), 400
-    if "total_time" not in data:
-        return jsonify({"error": "Missing total_time field"}), 400
+    if "end" not in data:
+        return jsonify({"error": "Missing end field"}), 400
     if "start" not in data:
         return jsonify({"error": "Missing start field"}), 400
     if "free_time" not in data:
@@ -77,8 +77,7 @@ def create_event():
         return jsonify({"error": "Missing blacklist field"}), 400
 
     start = datetime.datetime.fromisoformat(data["start"])
-    start = start.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=0)))
-    end = start + datetime.timedelta(seconds=data["total_time"])
+    end = datetime.datetime.fromisoformat(data["end"])
 
     cursor.execute(
         "INSERT INTO event (name, description, start, end, free_time) VALUES (%s, %s, %s, %s, %s)",
@@ -288,10 +287,13 @@ def get_event_status():
         else:
             additional_time = 0
 
+        #TODO: calculate progress between (0, 100)
+        progress = 0
+
         result["users"].append(
             {
-                "username": username,
-                "progress": total_time + additional_time,
+                "name": username,
+                "progress": progress,
                 "status": "ok"
                 if event_info[4] < total_time + additional_time
                 else "fail",

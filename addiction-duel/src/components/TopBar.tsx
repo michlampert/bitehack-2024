@@ -5,9 +5,10 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material'
+import { createUser } from '../api'
 
 export default function TopBarComponent() {
-    
+
     const [open, setOpen] = useState(false);
 
     const [name, setName] = useState("")
@@ -20,10 +21,10 @@ export default function TopBarComponent() {
         setOpen(false);
     };
 
-    const handleSubmit = () => {
-        // TODO
-        // set username on backend
-        console.log(name)
+    const handleSubmit = async () => {
+        let userId: number = await createUser(name);
+        chrome.storage.local.set({ userId: userId });
+
         setOpen(false);
     }
 

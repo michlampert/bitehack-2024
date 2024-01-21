@@ -1,14 +1,16 @@
 import React, { useState, FormEvent } from 'react';
 import { TextField, Button, Stack, Container } from '@mui/material';
+import { getEvent } from '../api';
+import { Event } from '../model';
 
-const EventInputComponent: React.FC = () => {
+const EventInputComponent: React.FC<{ onEventJoin: (event: Event) => void }> = ({ onEventJoin }) => {
     const [inputValue, setInputValue] = useState<string>('');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
     };
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault();
 
         const eventId = parseInt(inputValue, 10);
@@ -31,8 +33,13 @@ const EventInputComponent: React.FC = () => {
             }
 
             const data = await response.json();
-            console.log(data);
-            alert('Joined the event successfully!');
+
+            let newEvent = await getEvent(eventId);
+
+            // alert('Joined the event successfully!');
+            if (onEventJoin) {
+                onEventJoin(newEvent);
+            }
         } catch (error) {
             console.error('There was an error while joining the event:', error);
         }
@@ -41,7 +48,7 @@ const EventInputComponent: React.FC = () => {
     return <Container maxWidth="sm">
         <Stack direction="column" spacing={2}>
             <TextField type="number" label="Event ID" onChange={handleInputChange} fullWidth InputProps={{ inputProps: { min: 0 } }} />
-            <Button onClick={() => handleSubmit}> Join event</Button>
+            <Button onClick={(e) => handleSubmit(e)}> Join event</Button>
         </Stack>
     </Container>
 };

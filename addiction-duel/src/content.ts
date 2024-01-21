@@ -1,4 +1,3 @@
-import { getEvents, addEvent, addUserToEvent } from './api';
 console.log('Hello Content');
 const name = "Kuba";
 let userId: number;
@@ -37,13 +36,6 @@ function main() {
     });
 }
 
-
-// async function test() {
-//     console.log('test');
-//     const events = await getEvents("1");
-//     console.log(events);
-// }
-// test();
 
 function showPopupIfForbidden() {
     const domain = window.location.hostname.replace(/^www\./, '');

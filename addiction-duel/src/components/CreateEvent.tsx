@@ -6,10 +6,11 @@ import { LocalizationProvider, TimePicker, renderTimeViewClock } from '@mui/x-da
 import AddIcon from '@mui/icons-material/Add';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import dayjs from "dayjs";
-import { addUserToEvent } from "../api";
+import { addEvent, addUserToEvent, getEvent } from "../api";
 import { getId } from "../utils";
+import { Event } from "../model";
 
-export default function CreateEvent() {
+export default function CreateEvent({ onEventCreated }: { onEventCreated: (newEvent: Event) => void}) {
     const [blacklist, setBlacklist] = useState<string[]>([])
     const [eventName, setEventName] = useState<string>('')
     const [timeToUse, setTimeToUse] = useState<number>(30)
@@ -28,8 +29,15 @@ export default function CreateEvent() {
     }
 
     const scheduleEvent = (() => {
-        // TODO
-        getId().then(addUserToEvent)
+        (async () => {
+            let eventId: number = await addEvent(eventName, '', startTime, endTime, timeToUse, blacklist);
+            let userId: number = await getId();
+            await addUserToEvent(userId, eventId);
+
+            let newEvent = await getEvent(eventId);
+
+            onEventCreated(newEvent);
+        })();
     })
 
     return <Container maxWidth="sm">
