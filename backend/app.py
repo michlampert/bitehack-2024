@@ -4,8 +4,11 @@ import datetime
 from mysql.connector import Error
 
 from flask import Flask
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 
 db_config = {
     "host": "mysql",
@@ -65,7 +68,7 @@ def create_event():
             "INSERT INTO blacklist (event_id, website) VALUES (%s, %s)",
             (event_id, page),
         )
-
+    conn.commit()
 
     return jsonify({"message": "Event created successfully", "id": event_id}), 201
 
