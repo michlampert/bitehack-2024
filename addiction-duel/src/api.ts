@@ -4,49 +4,55 @@ const URL: string = "http://localhost:8000/"
 
 
 export async function getEvents(id: string): Promise<Event[]> {
-    //const f = (name: string): User => ({name, status: "ok"})
-    //const tmp: Event = { name: "asd", time: "3h", users: [f("Michał"), f("Wojtek"), {name: "Tomek", status: "fail"}, f("Mati")], blacklist: ["youtube.com"], state: "inProgress"}
-
     let response = await fetch(URL + "get-user-events?user_id=" + id);
     let data = await response.json();
 
     let events: Event[] = []
-    console.log(data)
     for (let i = 0; i < data.length; i++) {
         let eventStatusResponse = await fetch(
             URL + "get-event-status",
             {
                 method: "GET",
-                body: JSON.stringify({ event_id: data[i].id })
+                body: JSON.stringify({ event_id: data[i] })
             }
         );
-        let challengeStatus = await challengeStatusResponse.json();
+        let eventStatus = await eventStatusResponse.json();
 
-        let challengeConstraintsResponse = await fetch(URL + "get-challenge-constraints?challenge_id=" + data[i].id);
-        let challengeConstraints = await challengeConstraintsResponse.json();
+        let state: "inProgress" | "done" | "future" = "future"
 
-        events.push({
-            name: challengeStatus.title,
-            time: challengeStatus.end,
-            users: Object.keys(challengeStatus.participants).map((key) => { return { name: key, status: challengeStatus.participants[key].failed } })
-            blacklist: challengeConstraints.map((constraint) => { return constraint[1] }),
-            state: new Date() < new Date(challengeStatus.end) ? "inProgress" : "done"
-        })
+        if (eventStatus.end < Date.now()) {
+            state = "done"
+        } else if (eventStatus.end > Date.now()) {
+            state = "inProgress"
+        }
+
+        let event: Event = {
+            id: data[i],
+            name: eventStatus.name,
+            startTime: new Date(eventStatus.start),
+            endTime: new Date(eventStatus.end),
+            freeTime: eventStatus.free_time,
+            users: eventStatus.users,
+            blacklist: eventStatus.blacklist,
+            state: state
+        }
     }
 
     return events
 }
 
-export async function addEvent(): Promise<void> {
+export async function addEvent(name: string, description: string, totalTime: number, start: Date, freeTime: number, blacklist: string[]): Promise<void> {
     let response = await fetch(
-        URL + "add-challenge",
+        URL + "create-event",
         {
             method: "POST",
             body: JSON.stringify({
-                title: event.name,
-                start: event.time,
-                participants: event.users.map((user) => { return { user: user.name, failed: user.status == "fail" } }),
-                constraints: event.blacklist.map((url) => { return { url: url } })
+                name: name,
+                description: description,
+                total_time: totalTime,
+                start: start,
+                free_time: freeTime,
+                blacklist: blacklist
             })
         }
     );

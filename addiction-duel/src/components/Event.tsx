@@ -10,7 +10,8 @@ import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import EventIcon from '@mui/icons-material/Event';
 import MailIcon from '@mui/icons-material/Mail';
 import EditIcon from '@mui/icons-material/Edit';
-import copy from 'copy-text-to-clipboard';
+import { SocialIcon } from 'react-social-icons'
+import { WidthNormal } from '@mui/icons-material'
 
 export default function EventComponent(props: { event: Event }) {
 
@@ -45,7 +46,7 @@ export default function EventComponent(props: { event: Event }) {
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {
-                                props.event.blacklist.map(url => <Chip icon={<LinkOffIcon />} label={url} />)
+                                props.event.blacklist.map(url => <Chip icon={<SocialIcon  network={url.split('.')[0]} style={{height: 25, width: 25}}/>} label={url} />)
                             }
                         </Stack>
                     </Stack>
