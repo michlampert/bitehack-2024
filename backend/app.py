@@ -172,8 +172,8 @@ def is_forbidden():
         return jsonify({"error": "Missing website parameter"}), 400
 
     cursor.execute(
-        "SELECT name FROM events "
-        "INNER JOIN blacklist ON blacklist.event_id = events.id "
+        "SELECT name FROM event "
+        "INNER JOIN blacklist ON blacklist.event_id = event.id "
         "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
         (
             website,
