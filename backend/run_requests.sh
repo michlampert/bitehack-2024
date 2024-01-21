@@ -1,23 +1,22 @@
-
-host=$1
-port=5000
+host=localhost
+port=8000
 
 curl -X POST -H "Content-Type: application/json" -d '{"name":"tmek"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"wojtek"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"mateusz"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"michal"}' "http://$host:$port/create-user"
 
-curl -X POST -H "Content-Type: application/json" -d '{  "title": "Sample Challenge", "description": "This is a sample challenge description", "constraints": [{"time_limit": 1, "website": "youtube.com"}], "total_time": 10800, "start": "2024-01-20T18:11:54" }' "http://$host:$port/create-challenge"
-curl -X POST -H "Content-Type: application/json" -d '{  "title": "Another Challenge", "description": "This is different challenge", "constraints": [{"time_limit": 0, "website": "youtube.com"}], "total_time": 3600, "start": "2024-01-20T20:11:54" }' "http://$host:$port/create-challenge"
+curl -X POST -H "Content-Type: application/json" -d '{  "name": "Sample Challenge", "description": "This is a sample challenge description", "total_time": 10800, "start": "2024-01-20T23:11:54", "free_time": 600, "blacklist": ["youtube.com", "facebook.com"] }' "http://$host:$port/create-event"
+curl -X POST -H "Content-Type: application/json" -d '{  "name": "Second Challenge", "description": "This is another event description", "total_time": 12000, "start": "2024-01-20T22:11:54", "free_time": 600, "blacklist": ["instagram.com", "facebook.com"] }' "http://$host:$port/create-event"
 
 
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 1}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 2}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 3}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 4}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 1}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 2}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 3}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 4}' "http://$host:$port/add-participant"
 
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 2, "user_id": 1}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 2, "user_id": 1}' "http://$host:$port/add-participant"
 
-curl -X GET -H "Content-Type: application/json" -d '{"challenge_id": "1"}' http://$host:$port/get-challenge-status
+curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-event-status?event_id=1"
 
-curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-user-challenges?user_id=1"
+curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-user-events?user_id=1"

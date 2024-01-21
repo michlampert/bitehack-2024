@@ -3,13 +3,13 @@ import { Accordion, AccordionSummary, AccordionDetails, Chip, Stack, Typography,
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Event } from '../model'
 import FaceIcon from '@mui/icons-material/Face'
-import LinkOffIcon from '@mui/icons-material/LinkOff';
 import DoneIcon from '@mui/icons-material/Done';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import EventIcon from '@mui/icons-material/Event';
 import MailIcon from '@mui/icons-material/Mail';
 import EditIcon from '@mui/icons-material/Edit';
+import { SocialIcon } from 'react-social-icons';
 import copy from 'copy-text-to-clipboard';
 
 export default function EventComponent(props: { event: Event }) {
@@ -45,7 +45,7 @@ export default function EventComponent(props: { event: Event }) {
                         </Stack>
                         <Stack direction="row" spacing={1} justifyContent="left">
                             {
-                                props.event.blacklist.map(url => <Chip icon={<LinkOffIcon />} label={url} />)
+                                props.event.blacklist.map(url => <Chip icon={<SocialIcon  network={url.split('.')[0]} style={{height: 25, width: 25}}/>} label={url} />)
                             }
                         </Stack>
                     </Stack>
