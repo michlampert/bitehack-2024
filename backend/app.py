@@ -282,7 +282,7 @@ def get_event_status():
         else:
             additional_time = 0
 
-        progress = total_time + additional_time
+        progress = (total_time + additional_time) / 60
 
         result["users"].append(
             {
@@ -339,7 +339,7 @@ def get_user_event_statuses():
         else:
             additional_time = 0
 
-        progress = min(total_time + additional_time, free_time)
+        progress = min((total_time + additional_time) / 60, free_time)
         time_left = free_time - progress
         status_result = {"name": event_name, "time_left": time_left}
         if status_result not in result:
@@ -382,7 +382,7 @@ def get_failed_users():
         else:
             additional_time = 0
 
-        progress = total_time + additional_time
+        progress = (total_time + additional_time) / 60
         user = {"userId": user_id, "username": username}
         if event_info[4] < progress and user not in result:
             result.append(user)
