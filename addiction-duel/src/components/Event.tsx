@@ -108,7 +108,7 @@ export default function EventComponent(props: { event: Event }) {
 }
 
 function ProgressWithLabel(props: { label: string, value: number, status: string }) {
-    const color = props.status === "fail" ? "error" : props.value === 100 ? "success" : "info"
+    const color = props.value < 100 ? "info" : "error"
     return <Stack direction="row" spacing={1} justifyContent="left" alignItems="center">
         <Box sx={{ minWidth: 50 }}>
             <Typography variant="body2" color="text.secondary">{props.label}</Typography>
