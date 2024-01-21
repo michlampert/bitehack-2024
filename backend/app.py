@@ -6,8 +6,10 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from flask import Flask
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 db_config = {
     "host": "mysql",
@@ -89,7 +91,7 @@ def create_event():
             "INSERT INTO blacklist (event_id, website) VALUES (%s, %s)",
             (event_id, page),
         )
-
+    conn.commit()
     return jsonify({"message": "Event created successfully", "id": event_id}), 201
 
 
@@ -160,28 +162,25 @@ def update_status():
         status_id, last_started = status
         if last_started is None:
             cursor.execute(
-                "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
+                "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, '\n', %s) WHERE id = %s",
                 (
                     metadata_str,
                     status_id,
                 ),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(
-                last_started
-            )
+            difference = datetime.datetime.now() - last_started
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
                 (
-                    data["website"],
                     difference.total_seconds(),
                     status_id,
                 ),
             )
         else:
             cursor.execute(
-                "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
+                "UPDATE status SET reason = CONCAT(reason, '\n', %s) WHERE id = %s",
                 (
                     metadata_str,
                     status_id,
@@ -204,9 +203,10 @@ def is_forbidden():
         return jsonify({"error": "Missing website parameter"}), 400
 
     cursor.execute(
-        "SELECT name FROM events "
-        "INNER JOIN blacklist ON blacklist.event_id = events.id "
-        "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
+        "SELECT name FROM event "
+        "INNER JOIN blacklist ON blacklist.event_id = event.id "
+        "INNER JOIN status ON status.event_id = event.id "
+        "WHERE start < NOW() and end > NOW() and website = %s AND status.user_id = %s ",
         (
             website,
             user_id,
@@ -234,7 +234,7 @@ def get_history():
         (user_id,),
     )
     history = cursor.fetchone()
-    history_items = [json.loads(item) for item in history.split(" ")]
+    history_items = [json.loads(item) for item in history[0].split("\n") if item]
     return jsonify(history_items), 200
 
 
