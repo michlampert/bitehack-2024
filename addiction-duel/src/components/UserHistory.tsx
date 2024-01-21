@@ -7,12 +7,22 @@ interface HistoryItem {
     url: string;
 }
 
-const HistoryList: React.FC = () => {
+interface HistoryListProps {
+    id: number;
+}
+
+interface UserHistoryListProps {
+    id: number;
+    userId: number;
+    username: string;
+}
+
+const UserHistoryList: React.FC<UserHistoryListProps> = ({ id, userId, username }) => {
     const [items, setItems] = useState<HistoryItem[]>([]);
 
     useEffect(() => {
         // Replace with your actual endpoint
-        fetch('http://localhost:8000/get-history?user_id=1&event_id=1')
+        fetch('http://localhost:8000/get-history?user_id=' + userId + '&event_id=' + id)
             .then(response => response.json())
             .then((data: HistoryItem[]) => {
                 setItems(data);
@@ -25,7 +35,7 @@ const HistoryList: React.FC = () => {
     return (
         <div>
             <Typography variant="h4" gutterBottom sx={{ margin: '20px' }}>
-                History
+                {`User #${username}`}
             </Typography>
             <List>
                 {items.map((item, index) => (
@@ -37,6 +47,45 @@ const HistoryList: React.FC = () => {
                     </ListItem>
                 ))}
             </List>
+        </div>
+    );
+}
+
+interface User {
+    userId: number;
+    username: string;
+}
+
+const HistoryList: React.FC<HistoryListProps> = ({ id }) => {
+    const [eventUsers, setEventUsers] = useState<User[]>([]);
+
+    // Fetch data from your endpoint
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/get-failed-users?event_id=' + id);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setEventUsers(data); // Assuming the response is in the format you expect
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+            }
+        };
+
+        fetchData();
+    }, [id]);
+    return (
+        <div>
+            <Typography variant="h2" gutterBottom sx={{ margin: '20px' }}>
+                {`History #${id}`}
+            </Typography>
+            <div>
+                {eventUsers.map(user => (
+                    <UserHistoryList id={id} userId={user.userId} username={user.username} />
+                ))}
+            </div>
         </div>
     );
 }

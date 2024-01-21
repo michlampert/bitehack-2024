@@ -17,6 +17,6 @@ export default function App() {
 
   return <>
     <TopBarComponent />
-    {query.get("id") ? <DetailedView id={query.get("id")!} /> : <Home />}
+    {query.get("id") ? <DetailedView id={parseInt(query.get("id")!, 10)} /> : <Home />}
   </>
 }

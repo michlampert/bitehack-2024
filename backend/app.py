@@ -311,5 +311,47 @@ def get_user_events():
     return jsonify(event_ids), 200
 
 
+@app.get("/get-failed-users")
+def get_failed_users():
+    event_id = request.args.get("event_id")
+    if not event_id:
+        return jsonify({"error": "Missing event_id parameter"}), 400
+
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if not event_id:
+        return jsonify({"error": "Missing event_id field"}), 400
+
+    cursor.execute(
+        "SELECT users.id, username, total_time, last_started FROM status "
+        "INNER JOIN users ON status.user_id = users.id "
+        "WHERE event_id = %s",
+        (event_id,),
+    )
+    event_status = cursor.fetchall()
+
+    cursor.execute(
+        "SELECT name, description, start, end, free_time FROM event WHERE id = %s",
+        (event_id,),
+    )
+    event_info = cursor.fetchone()
+    result = []
+    for status in event_status:
+        user_id, username, total_time, last_started = status
+
+        if last_started is not None:
+            additional_time = (datetime.datetime.now() - last_started).total_seconds()
+        else:
+            additional_time = 0
+
+        progress = total_time + additional_time
+        user = {"userId": user_id, "username": username}
+        if event_info[4] < progress and user not in result:
+            result.append(user)
+
+    return jsonify(result), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
