@@ -35,7 +35,7 @@ export default function TopBarComponent() {
                     <PsychologyIcon />
                 </IconButton>
                 <Typography variant="h6" color="inherit" component="div">
-                    Addiction Duel
+                    Digital Detox Duel
                 </Typography>
 
             </Toolbar>
