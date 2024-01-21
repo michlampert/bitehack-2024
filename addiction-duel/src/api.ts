@@ -15,9 +15,10 @@ export async function getEvent(id: number): Promise<Event> {
     let eventStatus = await eventStatusResponse.json();
     let state: "inProgress" | "done" | "future" = "future"
 
-    if (eventStatus.end < Date.now()) {
+    console.log(new Date(eventStatus.end), new Date(eventStatus.start))
+    if (new Date(eventStatus.end) < new Date()) {
         state = "done"
-    } else if (eventStatus.end > Date.now()) {
+    } else if (new Date(eventStatus.end) > new Date()) {
         state = "inProgress"
     }
 
