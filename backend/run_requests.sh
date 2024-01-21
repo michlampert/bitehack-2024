@@ -11,13 +11,13 @@ curl -X POST -H "Content-Type: application/json" -d '{  "name": "Sample Challeng
 curl -X POST -H "Content-Type: application/json" -d '{  "name": "Second Challenge", "description": "This is another event description", "total_time": 12000, "start": "2024-01-20T22:11:54", "free_time": 600, "blacklist": ["instagram.com", "facebook.com"] }' "http://$host:$port/create-event"
 
 
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 1}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 2}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 3}' "http://$host:$port/add-participant"
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 1, "user_id": 4}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 1}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 2}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 3}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 1, "user_id": 4}' "http://$host:$port/add-participant"
 
-curl -X POST -H "Content-Type: application/json" -d '{"challenge_id": 2, "user_id": 1}' "http://$host:$port/add-participant"
+curl -X POST -H "Content-Type: application/json" -d '{"event_id": 2, "user_id": 1}' "http://$host:$port/add-participant"
 
-curl -X GET -H "Content-Type: application/json" -d '{"challenge_id": "1"}' http://$host:$port/get-challenge-status
+curl -X GET -H "Content-Type: application/json" -d '{"event_id": "1"}' http://$host:$port/get-event-status
 
-curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-user-challenges?user_id=1"
+curl -X GET -H "Content-Type: application/json" "http://$host:$port/get-user-events?user_id=1"

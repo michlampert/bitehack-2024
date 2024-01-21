@@ -11,7 +11,7 @@ db_config = {
     "host": "mysql",
     "user": "user",
     "password": "password",
-    "database": "challenge_db",
+    "database": "events_db",
 }
 
 
@@ -101,6 +101,7 @@ def add_participant():
         "INSERT INTO status (user_id, event_id) VALUES (%s, %s)",
         (data["user_id"], data["event_id"]),
     )
+    conn.commit()
     return jsonify({"message": "Participant added successfully"}), 201
 
 
@@ -202,18 +203,24 @@ def get_event_status():
     event_status = cursor.fetchall()
 
     cursor.execute(
-        "SELECT title, description, start, end, free_time FROM event WHERE id = %s",
+        "SELECT name, description, start, end, free_time FROM event WHERE id = %s",
         (data["event_id"],),
     )
     event_info = cursor.fetchone()
 
+    cursor.execute(
+        "SELECT website FROM blacklist WHERE event_id = %s", (data["event_id"],)
+    )
+    blacklist = cursor.fetchall()
+
     result = {
-        "title": event_info[0],
+        "name": event_info[0],
         "description": event_info[1],
         "start": event_info[2],
         "end": event_info[3],
         "free_time": event_info[4],
         "users": [],
+        "blacklist": blacklist,
     }
 
     for status in event_status:
