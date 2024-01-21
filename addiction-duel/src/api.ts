@@ -13,7 +13,7 @@ export async function getEvents(id: string): Promise<Event[]> {
             URL + "get-event-status",
             {
                 method: "GET",
-                body: JSON.stringify({event_id: data[i]})
+                body: JSON.stringify({ event_id: data[i] })
             }
         );
         let eventStatus = await eventStatusResponse.json();

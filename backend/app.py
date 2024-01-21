@@ -2,7 +2,9 @@ from flask import Flask, request, jsonify
 import mysql.connector
 import datetime
 from mysql.connector import Error
-
+import requests
+from bs4 import BeautifulSoup
+import json
 from flask import Flask
 from flask_cors import CORS
 
@@ -26,6 +28,28 @@ def db_connection():
         print(e)
         raise e
     return conn
+
+
+def extract_metadata_from_url(url: str):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+
+        # Parse the content with BeautifulSoup
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Find the title tag
+        title = soup.find("title").string
+
+        # Try to get the thumbnail from Open Graph meta tag
+        thumbnail_url = None
+        og_image = soup.find("meta", property="og:image")
+        if og_image:
+            thumbnail_url = og_image.get("content")
+
+        return {"title": title, "thumbnail_url": thumbnail_url}
+    except Exception as e:
+        return {}
 
 
 @app.route("/")
@@ -69,7 +93,6 @@ def create_event():
             (event_id, page),
         )
     conn.commit()
-
     return jsonify({"message": "Event created successfully", "id": event_id}), 201
 
 
@@ -132,15 +155,22 @@ def update_status():
     statuses = cursor.fetchall()
 
     for status in statuses:
+        metadata = {"website": data["website"]}
+        if "url" in data and data["url"] is not None:
+            metadata = extract_metadata_from_url(data["url"])
+            metadata["url"] = data["url"]
+        metadata_str = json.dumps(metadata)
         status_id, last_started = status
         if last_started is None:
             cursor.execute(
-                "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, ' ', %s) WHERE id = %s",
-                (data["url"] if "url" in data else data["website"], status_id,),
+                "UPDATE status SET last_started = NOW(), reason = CONCAT(reason, '\n', %s) WHERE id = %s",
+                (
+                    metadata_str,
+                    status_id,
+                ),
             )
         elif "url" not in data:
-            difference = datetime.datetime.now() - datetime.datetime.fromisoformat(
-                last_started)
+            difference = datetime.datetime.now() - last_started
 
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
@@ -152,10 +182,10 @@ def update_status():
             )
         else:
             cursor.execute(
-                "UPDATE status SET reason = CONCAT(reason, ' ', %s) WHERE id = %s",
+                "UPDATE status SET reason = CONCAT(reason, '\n', %s) WHERE id = %s",
                 (
-                    data["url"],
-                    status_id
+                    metadata_str,
+                    status_id,
                 ),
             )
     conn.commit()
@@ -178,7 +208,7 @@ def is_forbidden():
         "SELECT name FROM event "
         "INNER JOIN blacklist ON blacklist.event_id = event.id "
         "INNER JOIN status ON status.event_id = event.id "
-        "WHERE start < NOW() and end > NOW() and website = %s AND user_id = %s",
+        "WHERE start < NOW() and end > NOW() and website = %s AND status.user_id = %s ",
         (
             website,
             user_id,
@@ -187,6 +217,27 @@ def is_forbidden():
     constraint_ids = cursor.fetchall()
 
     return jsonify({"is_forbidden": len(constraint_ids) > 0}), 200
+
+
+@app.get("/get-history")
+def get_history():
+    user_id = request.args.get("user_id")
+    event_id = request.args.get("event_id")
+    conn = db_connection()
+    cursor = conn.cursor()
+
+    if not user_id or not event_id:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+
+    cursor.execute(
+        "SELECT reason FROM event "
+        "INNER JOIN blacklist ON blacklist.event_id = event.id "
+        "INNER JOIN status ON status.user_id = %s AND status.event_id = event.id ",
+        (user_id,),
+    )
+    history = cursor.fetchone()
+    history_items = [json.loads(item) for item in history[0].split("\n") if item]
+    return jsonify(history_items), 200
 
 
 @app.get("/get-event-status")
@@ -231,9 +282,9 @@ def get_event_status():
         username, total_time, last_started = status
 
         if last_started is not None:
-            additional_time = (datetime.datetime.now() - datetime.datetime.fromisoformat(
-                last_started
-            )).total_seconds()
+            additional_time = (
+                datetime.datetime.now() - datetime.datetime.fromisoformat(last_started)
+            ).total_seconds()
         else:
             additional_time = 0
 
@@ -241,7 +292,9 @@ def get_event_status():
             {
                 "username": username,
                 "progress": total_time + additional_time,
-                "status": "ok" if event_info[4] < total_time + additional_time else "fail",
+                "status": "ok"
+                if event_info[4] < total_time + additional_time
+                else "fail",
             }
         )
 

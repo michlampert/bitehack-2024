@@ -1,6 +1,5 @@
-
-host=$1
-port=5000
+host=localhost
+port=8000
 
 curl -X POST -H "Content-Type: application/json" -d '{"name":"tmek"}' "http://$host:$port/create-user"
 curl -X POST -H "Content-Type: application/json" -d '{"name":"wojtek"}' "http://$host:$port/create-user"

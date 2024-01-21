@@ -23,7 +23,7 @@ const EventInputComponent: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ challenge_id: eventId, user_id: 1 }),
+                body: JSON.stringify({ event_id: eventId, user_id: 1 }),
             });
 
             if (!response.ok) {
