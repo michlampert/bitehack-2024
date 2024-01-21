@@ -8,6 +8,7 @@ import json
 from flask import Flask
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -174,6 +175,7 @@ def update_status():
             cursor.execute(
                 "UPDATE status SET last_started = NULL, total_time = total_time + %s WHERE id = %s",
                 (
+                    data["website"],
                     difference.total_seconds(),
                     status_id,
                 ),

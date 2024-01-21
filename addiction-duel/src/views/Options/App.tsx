@@ -1,34 +1,22 @@
-import React, { useState } from 'react'
+import React from 'react'
 
-import EventComponent from '../../components/Event'
+import { useLocation } from 'react-router-dom'
+import DetailedView from './DetailedView'
+import Home from './Home'
 import TopBarComponent from '../../components/TopBar'
-import EventInputComponent from '../../components/EventInput'
-import { Event } from '../../model'
-import HistoryList from '../../components/UserHistory';
 
-import './App.css'
-import { getEvents } from '../../api'
+function useQuery() {
+  const { search } = useLocation();
+
+  return React.useMemo(() => new URLSearchParams(search), [search]);
+}
 
 export default function App() {
 
-  const [events, setEvents] = useState<Event[]>([])
-
-  const historyItems = [
-    { id: 1, url: 'https://www.youtube.com/watch?v=SiVG-bu8Vjs' },
-    { id: 2, url: 'https://www.youtube.com/watch?v=v18Q4WBu30g' },
-    { id: 3, url: 'https://www.youtube.com/watch?v=stD5O9YnM04' },
-    { id: 4, url: 'https://facebook.com' }
-  ];
-
-
-  getEvents("user_id").then(setEvents)
+  const query = useQuery()
 
   return <>
     <TopBarComponent />
-    <EventInputComponent />
-    {
-      events.map((e, idx) => <EventComponent key={idx} event={e}></EventComponent>)
-    }
-    <HistoryList historyItems={historyItems} />;
+    {query.get("id") ? <DetailedView id={query.get("id")!} /> : <Home />}
   </>
 }

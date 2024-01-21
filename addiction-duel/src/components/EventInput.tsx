@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { TextField, Button } from '@mui/material';
+import { TextField, Button, Stack } from '@mui/material';
 
 const EventInputComponent: React.FC = () => {
     const [inputValue, setInputValue] = useState<string>('');
@@ -39,18 +39,11 @@ const EventInputComponent: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '300px', margin: 'auto' }}>
-            <TextField
-                type="number"
-                value={inputValue}
-                onChange={handleInputChange}
-                label="Enter Event ID"
-                variant="outlined"
-            />
-            <Button variant="contained" color="primary" type="submit">
-                Join Event
-            </Button>
-        </form>
+        <Stack>
+            <TextField type="number" label="Event ID" onChange={handleInputChange} fullWidth InputProps={{inputProps: {min: 0}}} />
+            <Button onClick={() => handleSubmit}> Join event</Button>
+        </Stack>
+
     );
 };
 
