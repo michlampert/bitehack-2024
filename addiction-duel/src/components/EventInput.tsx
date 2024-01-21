@@ -41,9 +41,8 @@ const EventInputComponent: React.FC = () => {
     return (
         <Stack>
             <TextField type="number" label="Event ID" onChange={handleInputChange} fullWidth InputProps={{inputProps: {min: 0}}} />
-            <Button onClick={() => handleSubmit}> Join event</Button>
+            <Button onClick={() => handleSubmit}>Join event</Button>
         </Stack>
-
     );
 };
 
